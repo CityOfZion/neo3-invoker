@@ -13,7 +13,7 @@
   "dependencies": {
     "@cityofzion/neon-core": "^5.2.0",
     "@cityofzion/neon-js": "^5.2.0",
-    "@cityofzion/neo3-invoker": "workspace:*"
+    "@cityofzion/neo3-invoker": "^1.0.3"
   },
   "devDependencies": {
     "typescript": "^4.3.2"

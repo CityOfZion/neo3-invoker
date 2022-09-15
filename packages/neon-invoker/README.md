@@ -19,6 +19,8 @@ npm i @cityofzion/neon-invoker
 
 ## Initialize NeonInvoker
 To use NeonInvoker as a Neo3Invoker you can simply call `NeonInvoker.init` and pass the `NeonInvoker` instance to the SDK that requires a `Neo3Invoker`.
+
+To sign the transactions you should pass an account to the `NeonInvoker.init` method. You can use the `Account` class from `@cityofzion/neon-core` to create an account.
 ```ts
 import { NeonInvoker } from '@cityofzion/neon-invoker'
 import {default as Neon} from '@cityofzion/neon-js'
@@ -27,9 +29,16 @@ const acct = Neon.create.account('NKuyBkoGdZZSLyPbJEetheRhMjeznFZszf')
 
 const neonInvoker: Neo3Invoker = await NeonInvoker.init(acct)
 ```
-The only mandatory parameter of `NeonInvoker.init` is the `account` parameter, which is the account that will be used to
-sign the transaction. If you don't pass any other parameter, the default `network` will be `TestNet` and the default `rpc`
-will be `https://test1.cityofzion.io:443`.
+
+If you don't wanna sign, simply pass `undefined` as the account.
+```ts
+import { NeonInvoker } from '@cityofzion/neon-invoker'
+
+const neonInvoker: Neo3Invoker = await NeonInvoker.init(undefined)
+```
+
+There is an additional parameter `rpcEndpoint` that can be used to specify the RPC endpoint to use. If not specified,
+the default `network` will be `TestNet` and the default `rpc` will be `https://test1.cityofzion.io:443`.
 
 Another example of initialization is:
 ```ts

@@ -9,10 +9,10 @@ export type RpcConfig = {
 }
 
 export class NeonInvoker implements Neo3Invoker {
-  private constructor (public rpcConfig: RpcConfig, public account: wallet.Account) {
+  private constructor (public rpcConfig: RpcConfig, public account: wallet.Account | undefined) {
   }
 
-  static async init (account: wallet.Account, rpcAddress: string = 'https://testnet1.neo.coz.io:443'): Promise<NeonInvoker> {
+  static async init (account: wallet.Account | undefined, rpcAddress: string = 'https://testnet1.neo.coz.io:443'): Promise<NeonInvoker> {
     const networkMagic = await this.getMagicOfRpcAddress(rpcAddress)
     return new NeonInvoker({ rpcAddress, networkMagic }, account)
   }
