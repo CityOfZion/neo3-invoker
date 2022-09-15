@@ -37,4 +37,4 @@ const neonInvoker: Neo3Invoker = await NeonInvoker.init(acct, 'http://127.0.0.1:
 ```
 
 ## Usage
-The usage of NeonInvoker is documented in the [Neo3-Invoker Docs](https://raw.githubusercontent.com/CityOfZion/neo3-invoker/packages/neo3-invoker/docs/index.html).
+The usage of NeonInvoker is documented in the [Neo3-Invoker Docs](https://htmlpreview.github.io/?https://raw.githubusercontent.com/CityOfZion/neo3-invoker/master/packages/neo3-invoker/docs/modules.html).

@@ -21,7 +21,7 @@ npm i @cityofzion/neo3-invoker
 ```
 
 ### Documentation
-Checkout the auto-generated [Docs](https://raw.githubusercontent.com/CityOfZion/neo3-invoker/packages/neo3-invoker/docs/index.html)
+Checkout the auto-generated [Docs](https://htmlpreview.github.io/?https://raw.githubusercontent.com/CityOfZion/neo3-invoker/master/packages/neo3-invoker/docs/modules.html)
 based on the [Code](packages/neo3-invoker/src/index.ts).
 
 ## Neon-Invoker
