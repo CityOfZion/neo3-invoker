@@ -17,7 +17,7 @@ class NeonInvoker {
         this.rpcConfig = rpcConfig;
         this.account = account;
     }
-    static init(rpcAddress, account) {
+    static init(account, rpcAddress = 'https://testnet1.neo.coz.io:443') {
         return __awaiter(this, void 0, void 0, function* () {
             const networkMagic = yield this.getMagicOfRpcAddress(rpcAddress);
             return new NeonInvoker({ rpcAddress, networkMagic }, account);
