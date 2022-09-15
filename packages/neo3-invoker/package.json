@@ -1,6 +1,6 @@
 {
   "name": "@cityofzion/neo3-invoker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,7 +8,7 @@
     "/dist"
   ],
   "scripts": {
-      "build": "tsc && typedoc src/index.ts"
+    "build": "tsc && typedoc src/index.ts"
   },
   "dependencies": {
     "@cityofzion/neon-core": "^5.2.0"
@@ -19,7 +19,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CityOfZion/neo3-invoker.git",
-    "directory": "packages/neo3-invoker"
+    "url": "https://github.com/CityOfZion/neo3-invoker.git"
   }
 }
