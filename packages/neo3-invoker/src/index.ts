@@ -130,7 +130,7 @@ export interface Neo3Invoker {
    * @param params the contract invocation options
    * @return the call result promise. It might only contain the transactionId, another call to the blockchain might be necessary to check the result.
    */
-  testInvoke: (cim: ContractInvocationMulti) => Promise<rpc.InvokeResult>
+  invokeFunction: (cim: ContractInvocationMulti) => Promise<string>
 
   /**
    * Sends a `testInvoke` request to the Wallet and it will communicate with the blockchain.
@@ -172,5 +172,5 @@ export interface Neo3Invoker {
    * @param params the contract invocation options
    * @return the call result promise
    */
-  invokeFunction: (cim: ContractInvocationMulti) => Promise<string>
+  testInvoke: (cim: ContractInvocationMulti) => Promise<rpc.InvokeResult>
 }

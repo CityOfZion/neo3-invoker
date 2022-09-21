@@ -7,9 +7,11 @@ export declare type RpcConfig = {
 };
 export declare class NeonInvoker implements Neo3Invoker {
     rpcConfig: RpcConfig;
-    account: wallet.Account;
+    account: wallet.Account | undefined;
+    static MAINNET: string;
+    static TESTNET: string;
     private constructor();
-    static init(account: wallet.Account, rpcAddress?: string): Promise<NeonInvoker>;
+    static init(rpcAddress: string, account?: wallet.Account): Promise<NeonInvoker>;
     static getMagicOfRpcAddress(rpcAddress: string): Promise<number>;
     testInvoke(cim: ContractInvocationMulti): Promise<Neon.rpc.InvokeResult>;
     invokeFunction(cim: ContractInvocationMulti): Promise<string>;

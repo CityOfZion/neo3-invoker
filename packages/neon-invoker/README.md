@@ -27,22 +27,21 @@ import {default as Neon} from '@cityofzion/neon-js'
 
 const acct = Neon.create.account('NKuyBkoGdZZSLyPbJEetheRhMjeznFZszf')
 
-const neonInvoker: Neo3Invoker = await NeonInvoker.init(acct)
+const neonInvoker: Neo3Invoker = await NeonInvoker.init(NeonInvoker.MAINNET, acct)
 ```
 
-If you don't wanna sign, simply pass `undefined` as the account.
+If you don't want to sign, simply don't pass an account.
 ```ts
 import { NeonInvoker } from '@cityofzion/neon-invoker'
 
-const neonInvoker: Neo3Invoker = await NeonInvoker.init(undefined)
+const neonInvoker: Neo3Invoker = await NeonInvoker.init(NeonInvoker.MAINNET)
 ```
 
-There is an additional parameter `rpcEndpoint` that can be used to specify the RPC endpoint to use. If not specified,
-the default `network` will be `TestNet` and the default `rpc` will be `https://test1.cityofzion.io:443`.
+You can also pass a custom RPC endpoint to the `NeonInvoker.init` method.
 
 Another example of initialization is:
 ```ts
-const neonInvoker: Neo3Invoker = await NeonInvoker.init(acct, 'http://127.0.0.1:5001')
+const neonInvoker: Neo3Invoker = await NeonInvoker.init('http://127.0.0.1:5001', acct)
 ```
 
 ## Usage

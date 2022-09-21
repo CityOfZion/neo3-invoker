@@ -125,7 +125,7 @@ export interface Neo3Invoker {
      * @param params the contract invocation options
      * @return the call result promise. It might only contain the transactionId, another call to the blockchain might be necessary to check the result.
      */
-    testInvoke: (cim: ContractInvocationMulti) => Promise<rpc.InvokeResult>;
+    invokeFunction: (cim: ContractInvocationMulti) => Promise<string>;
     /**
      * Sends a `testInvoke` request to the Wallet and it will communicate with the blockchain.
      * It will not consume any gas but it will also not persist any data, this is often used to retrieve SmartContract information or check how much gas an invocation will cost.
@@ -166,5 +166,5 @@ export interface Neo3Invoker {
      * @param params the contract invocation options
      * @return the call result promise
      */
-    invokeFunction: (cim: ContractInvocationMulti) => Promise<string>;
+    testInvoke: (cim: ContractInvocationMulti) => Promise<rpc.InvokeResult>;
 }
