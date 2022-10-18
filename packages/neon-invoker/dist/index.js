@@ -91,22 +91,20 @@ class NeonInvoker {
     }
     static convertParams(args) {
         return args.map(a => {
-            if (a.value === undefined)
-                return a;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             switch (a.type) {
                 case 'Any': return neon_js_1.sc.ContractParam.any(a.value);
-                case 'String': return neon_js_1.sc.ContractParam.string(a.value);
-                case 'Boolean': return neon_js_1.sc.ContractParam.boolean(a.value);
-                case 'PublicKey': return neon_js_1.sc.ContractParam.publicKey(a.value);
+                case 'String': return neon_js_1.sc.ContractParam.string((_a = a.value) !== null && _a !== void 0 ? _a : '');
+                case 'Boolean': return neon_js_1.sc.ContractParam.boolean((_b = a.value) !== null && _b !== void 0 ? _b : false);
+                case 'PublicKey': return neon_js_1.sc.ContractParam.publicKey((_c = a.value) !== null && _c !== void 0 ? _c : '');
                 case 'Address':
                 case 'Hash160':
-                    return neon_js_1.sc.ContractParam.hash160(a.value);
-                case 'Hash256': return neon_js_1.sc.ContractParam.hash256(a.value);
-                case 'Integer': return neon_js_1.sc.ContractParam.integer(a.value);
-                case 'ScriptHash': return neon_js_1.sc.ContractParam.hash160(Neon.u.HexString.fromHex(a.value));
-                case 'Array': return neon_js_1.sc.ContractParam.array(...this.convertParams(a.value));
-                case 'ByteArray': return neon_js_1.sc.ContractParam.byteArray(a.value);
-                default: return a;
+                    return neon_js_1.sc.ContractParam.hash160((_d = a.value) !== null && _d !== void 0 ? _d : '');
+                case 'Hash256': return neon_js_1.sc.ContractParam.hash256((_e = a.value) !== null && _e !== void 0 ? _e : '');
+                case 'Integer': return neon_js_1.sc.ContractParam.integer((_f = a.value) !== null && _f !== void 0 ? _f : '');
+                case 'ScriptHash': return neon_js_1.sc.ContractParam.hash160(Neon.u.HexString.fromHex((_g = a.value) !== null && _g !== void 0 ? _g : ''));
+                case 'Array': return neon_js_1.sc.ContractParam.array(...this.convertParams(((_h = a.value) !== null && _h !== void 0 ? _h : [])));
+                case 'ByteArray': return neon_js_1.sc.ContractParam.byteArray((_j = a.value) !== null && _j !== void 0 ? _j : '');
             }
         });
     }
