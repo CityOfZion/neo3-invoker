@@ -1,4 +1,4 @@
-import {ContractInvocationMulti, Signer, Neo3Invoker} from '@cityofzion/neo3-invoker'
+import {ContractInvocationMulti, Signer, Neo3Invoker, Arg} from '@cityofzion/neo3-invoker'
 import { tx, u, rpc, sc, experimental } from '@cityofzion/neon-js'
 import * as Neon from '@cityofzion/neon-core'
 import { wallet } from '@cityofzion/neon-core'
@@ -112,31 +112,24 @@ export class NeonInvoker implements Neo3Invoker {
     return await rpcClient.sendRawTransaction(trx)
   }
 
-  static convertParams (args: any[]): Neon.sc.ContractParam[] {
+  static convertParams (args: Arg[]): Neon.sc.ContractParam[] {
     return args.map(a => {
       if (a.value === undefined) return a
 
       switch (a.type) {
-        case 'Any':
-          return sc.ContractParam.any(a.value)
-        case 'String':
-          return sc.ContractParam.string(a.value)
-        case 'Boolean':
-          return sc.ContractParam.boolean(a.value)
-        case 'PublicKey':
-          return sc.ContractParam.publicKey(a.value)
+        case 'Any': return sc.ContractParam.any(a.value)
+        case 'String': return sc.ContractParam.string(a.value)
+        case 'Boolean': return sc.ContractParam.boolean(a.value)
+        case 'PublicKey': return sc.ContractParam.publicKey(a.value)
+        case 'Address':
         case 'Hash160':
           return sc.ContractParam.hash160(a.value)
-        case 'Hash256':
-          return sc.ContractParam.hash256(a.value)
-        case 'Integer':
-          return sc.ContractParam.integer(a.value)
-        case 'Array':
-          return sc.ContractParam.array(...this.convertParams(a.value))
-        case 'ByteArray':
-          return sc.ContractParam.byteArray(a.value)
-        default:
-          return a
+        case 'Hash256': return sc.ContractParam.hash256(a.value)
+        case 'Integer': return sc.ContractParam.integer(a.value)
+        case 'ScriptHash': return sc.ContractParam.hash160(Neon.u.HexString.fromHex(a.value))
+        case 'Array': return sc.ContractParam.array(...this.convertParams(a.value))
+        case 'ByteArray': return sc.ContractParam.byteArray(a.value)
+        default: return a
       }
     })
   }

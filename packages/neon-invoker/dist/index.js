@@ -94,26 +94,19 @@ class NeonInvoker {
             if (a.value === undefined)
                 return a;
             switch (a.type) {
-                case 'Any':
-                    return neon_js_1.sc.ContractParam.any(a.value);
-                case 'String':
-                    return neon_js_1.sc.ContractParam.string(a.value);
-                case 'Boolean':
-                    return neon_js_1.sc.ContractParam.boolean(a.value);
-                case 'PublicKey':
-                    return neon_js_1.sc.ContractParam.publicKey(a.value);
+                case 'Any': return neon_js_1.sc.ContractParam.any(a.value);
+                case 'String': return neon_js_1.sc.ContractParam.string(a.value);
+                case 'Boolean': return neon_js_1.sc.ContractParam.boolean(a.value);
+                case 'PublicKey': return neon_js_1.sc.ContractParam.publicKey(a.value);
+                case 'Address':
                 case 'Hash160':
                     return neon_js_1.sc.ContractParam.hash160(a.value);
-                case 'Hash256':
-                    return neon_js_1.sc.ContractParam.hash256(a.value);
-                case 'Integer':
-                    return neon_js_1.sc.ContractParam.integer(a.value);
-                case 'Array':
-                    return neon_js_1.sc.ContractParam.array(...this.convertParams(a.value));
-                case 'ByteArray':
-                    return neon_js_1.sc.ContractParam.byteArray(a.value);
-                default:
-                    return a;
+                case 'Hash256': return neon_js_1.sc.ContractParam.hash256(a.value);
+                case 'Integer': return neon_js_1.sc.ContractParam.integer(a.value);
+                case 'ScriptHash': return neon_js_1.sc.ContractParam.hash160(Neon.u.HexString.fromHex(a.value));
+                case 'Array': return neon_js_1.sc.ContractParam.array(...this.convertParams(a.value));
+                case 'ByteArray': return neon_js_1.sc.ContractParam.byteArray(a.value);
+                default: return a;
             }
         });
     }

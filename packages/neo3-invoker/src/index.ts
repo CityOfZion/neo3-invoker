@@ -32,6 +32,9 @@ export type Signer = {
   allowedGroups?: string[]
 }
 
+export type ArgType = 'Any' | 'String' | 'Boolean' | 'PublicKey' | 'Address' | 'Hash160' | 'Hash256' | 'Integer' | 'ScriptHash' | 'Array' | 'ByteArray'
+export type Arg = { type: ArgType, value: any }
+
 /**
  * A simple interface that defines the invocation options
  */
@@ -47,7 +50,7 @@ export type ContractInvocation = {
   /**
    * The parameters to be sent to the method
    */
-  args: any[]
+  args: Arg[]
   /**
    * When requesting multiple invocations, you can set `abortOnFail` to true on some invocations so the VM will abort the rest of the calls if this invocation returns `false`
    */
