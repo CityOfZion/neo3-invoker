@@ -90,7 +90,7 @@ class NeonInvoker {
         });
     }
     static convertParams(args) {
-        return args.map(a => {
+        return (args !== null && args !== void 0 ? args : []).map(a => {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             switch (a.type) {
                 case 'Any': return neon_js_1.sc.ContractParam.any(a.value);
@@ -108,22 +108,22 @@ class NeonInvoker {
             }
         });
     }
-    static buildSigner(account, signerEntry) {
-        var _a;
-        const signer = new neon_js_1.tx.Signer({
-            account: account.scriptHash,
+    static buildSigner(defaultAccount, signerEntry) {
+        var _a, _b;
+        let scopes = (_a = signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.scopes) !== null && _a !== void 0 ? _a : 'CalledByEntry';
+        if (typeof scopes === 'number') {
+            scopes = Neon.tx.toString(scopes);
+        }
+        return neon_js_1.tx.Signer.fromJson({
+            scopes,
+            account: (_b = signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.account) !== null && _b !== void 0 ? _b : defaultAccount.scriptHash,
+            allowedcontracts: signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.allowedContracts,
+            allowedgroups: signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.allowedGroups,
+            rules: signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.rules
         });
-        signer.scopes = (_a = signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.scopes) !== null && _a !== void 0 ? _a : Neon.tx.WitnessScope.CalledByEntry;
-        if (signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.allowedContracts) {
-            signer.allowedContracts = signerEntry.allowedContracts.map(ac => neon_js_1.u.HexString.fromHex(ac));
-        }
-        if (signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.allowedGroups) {
-            signer.allowedGroups = signerEntry.allowedGroups.map(ac => neon_js_1.u.HexString.fromHex(ac));
-        }
-        return signer;
     }
-    static buildMultipleSigner(account, signers) {
-        return !(signers === null || signers === void 0 ? void 0 : signers.length) ? [this.buildSigner(account)] : signers.map(s => this.buildSigner(account, s));
+    static buildMultipleSigner(defaultAccount, signers) {
+        return !(signers === null || signers === void 0 ? void 0 : signers.length) ? [this.buildSigner(defaultAccount)] : signers.map(s => this.buildSigner(defaultAccount, s));
     }
 }
 exports.NeonInvoker = NeonInvoker;

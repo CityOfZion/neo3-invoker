@@ -1,6 +1,6 @@
 {
   "name": "@cityofzion/neo3-invoker",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,9 +9,6 @@
   ],
   "scripts": {
     "build": "tsc && typedoc src/index.ts"
-  },
-  "dependencies": {
-    "@cityofzion/neon-core": "^5.2.0"
   },
   "devDependencies": {
     "typescript": "^4.3.2",

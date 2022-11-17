@@ -1,4 +1,66 @@
-import { rpc, tx } from '@cityofzion/neon-core'
+export interface BooleanWitnessCondition {
+  type: "Boolean"
+  expression: boolean
+}
+
+export interface NotWitnessCondition {
+  type: "Not"
+  expression: WitnessCondition
+}
+
+export interface AndWitnessCondition {
+  type: "And"
+  expressions: WitnessCondition[]
+}
+
+export interface OrWitnessCondition {
+  type: "Or"
+  expressions: WitnessCondition[]
+}
+
+export interface ScriptHashWitnessCondition {
+  type: "ScriptHash"
+  // Scripthash
+  hash: string
+}
+
+export interface GroupWitnessCondition {
+  type: "Group"
+  // Public key
+  group: string
+}
+
+export interface CalledByEntryWitnessCondition {
+  type: "CalledByEntry"
+}
+
+export interface CalledByContractWitnessCondition {
+  type: "CalledByContract"
+  // Scripthash
+  hash: string
+}
+
+export interface CalledByGroupWitnessCondition {
+  type: "CalledByGroup"
+  // Public key
+  group: string
+}
+
+export type WitnessCondition =
+  | BooleanWitnessCondition
+  | AndWitnessCondition
+  | NotWitnessCondition
+  | OrWitnessCondition
+  | ScriptHashWitnessCondition
+  | GroupWitnessCondition
+  | CalledByEntryWitnessCondition
+  | CalledByContractWitnessCondition
+  | CalledByGroupWitnessCondition
+
+export interface WitnessRule {
+  action: string
+  condition: WitnessCondition
+}
 
 /**
  * A simple interface that defines the signing options, which privileges the user needs to give for the SmartContract.
@@ -17,7 +79,7 @@ export type Signer = {
   /**
    * The level of permission the invocation needs
    */
-  scopes: tx.WitnessScope
+  scopes: string | number
   /**
    * An optional scriptHash to be used to sign, if no account is provided the user selected account will be used
    */
@@ -30,6 +92,8 @@ export type Signer = {
    * When the scopes is `WitnessScope.CustomGroups`, you need to specify which groups are allowed
    */
   allowedGroups?: string[]
+
+  rules?: WitnessRule[]
 }
 
 export type ArgType = 'Any' | 'String' | 'Boolean' | 'PublicKey' | 'Address' | 'Hash160' | 'Hash256' | 'Integer' | 'ScriptHash' | 'Array' | 'ByteArray'
@@ -50,7 +114,7 @@ export type ContractInvocation = {
   /**
    * The parameters to be sent to the method
    */
-  args: Arg[]
+  args?: Arg[]
   /**
    * When requesting multiple invocations, you can set `abortOnFail` to true on some invocations so the VM will abort the rest of the calls if this invocation returns `false`
    */
@@ -64,7 +128,7 @@ export type ContractInvocationMulti = {
   /**
    * the signing options
    */
-  signers: Signer[]
+  signers?: Signer[]
   /**
    * The array of invocations
    */
@@ -85,6 +149,46 @@ export type ContractInvocationMulti = {
    * for the cases you need to calculate the network fee by yourself
    */
   networkFeeOverride?: number
+}
+
+export declare enum StackItemType {
+  Any = 0,
+  Pointer = 16,
+  Boolean = 32,
+  Integer = 33,
+  ByteString = 40,
+  Buffer = 48,
+  Array = 64,
+  Struct = 65,
+  Map = 72,
+  InteropInterface = 96
+}
+
+export interface StackItemJson {
+  type: keyof typeof StackItemType
+  value?: string | boolean | number | StackItemJson[]
+}
+
+/**
+ * Result from calling invokescript or invokefunction.
+ */
+export interface InvokeResult {
+  /** The script that is sent for execution on the blockchain as a base64 string. */
+  script: string
+  /** State of VM on exit. HALT means a successful exit while FAULT means exit with error. */
+  state: "HALT" | "FAULT"
+  /** Amount of gas consumed up to the point of stopping in the VM. If state is FAULT, this value is not representative of the amount of gas it will consume if it somehow succeeds on the blockchain.
+   * This is a decimal value.
+   */
+  gasconsumed: string
+  /** A human-readable string clarifying the exception that occurred. Only available when state is "FAULT". */
+  exception: string | null
+  stack: StackItemJson[]
+  /** A ready to send transaction that wraps the script.
+   * Only available when signers are provided and the sender's private key is open in the RPC node.
+   * Formatted in base64-encoding.
+   */
+  tx?: string
 }
 
 /**
@@ -175,5 +279,5 @@ export interface Neo3Invoker {
    * @param params the contract invocation options
    * @return the call result promise
    */
-  testInvoke: (cim: ContractInvocationMulti) => Promise<rpc.InvokeResult>
+  testInvoke: (cim: ContractInvocationMulti) => Promise<InvokeResult>
 }

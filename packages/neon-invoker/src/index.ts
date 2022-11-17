@@ -1,4 +1,4 @@
-import {ContractInvocationMulti, Signer, Neo3Invoker, Arg} from '@cityofzion/neo3-invoker'
+import { ContractInvocationMulti, Signer, Neo3Invoker, Arg, InvokeResult } from '@cityofzion/neo3-invoker'
 import { tx, u, rpc, sc, experimental } from '@cityofzion/neon-js'
 import * as Neon from '@cityofzion/neon-core'
 import { wallet } from '@cityofzion/neon-core'
@@ -35,7 +35,7 @@ export class NeonInvoker implements Neo3Invoker {
 
   async testInvoke (
     cim: ContractInvocationMulti
-  ): Promise<Neon.rpc.InvokeResult> {
+  ): Promise<InvokeResult> {
     const sb = new sc.ScriptBuilder()
 
     cim.invocations.forEach(c => {
@@ -112,8 +112,8 @@ export class NeonInvoker implements Neo3Invoker {
     return await rpcClient.sendRawTransaction(trx)
   }
 
-  static convertParams (args: Arg[]): Neon.sc.ContractParam[] {
-    return args.map(a => {
+  static convertParams (args: Arg[] | undefined): Neon.sc.ContractParam[] {
+    return (args ?? []).map(a => {
       switch (a.type) {
         case 'Any': return sc.ContractParam.any(a.value)
         case 'String': return sc.ContractParam.string(a.value ?? '')
@@ -131,23 +131,21 @@ export class NeonInvoker implements Neo3Invoker {
     })
   }
 
-  static buildSigner (account: Neon.wallet.Account, signerEntry?: Signer): Neon.tx.Signer {
-    const signer = new tx.Signer({
-      account: account.scriptHash,
+  static buildSigner (defaultAccount: Neon.wallet.Account, signerEntry?: Signer): Neon.tx.Signer {
+    let scopes = signerEntry?.scopes ?? 'CalledByEntry'
+    if (typeof scopes === 'number') {
+      scopes = Neon.tx.toString(scopes)
+    }
+    return tx.Signer.fromJson({
+      scopes,
+      account: signerEntry?.account ?? defaultAccount.scriptHash,
+      allowedcontracts: signerEntry?.allowedContracts,
+      allowedgroups: signerEntry?.allowedGroups,
+      rules: signerEntry?.rules
     })
-
-    signer.scopes = signerEntry?.scopes ?? Neon.tx.WitnessScope.CalledByEntry
-    if (signerEntry?.allowedContracts) {
-      signer.allowedContracts = signerEntry.allowedContracts.map(ac => u.HexString.fromHex(ac))
-    }
-    if (signerEntry?.allowedGroups) {
-      signer.allowedGroups = signerEntry.allowedGroups.map(ac => u.HexString.fromHex(ac))
-    }
-
-    return signer
   }
 
-  static buildMultipleSigner (account: Neon.wallet.Account, signers: Signer[]): Neon.tx.Signer[] {
-    return !signers?.length ? [this.buildSigner(account)] : signers.map(s => this.buildSigner(account, s))
+  static buildMultipleSigner (defaultAccount: Neon.wallet.Account, signers: Signer[] | undefined): Neon.tx.Signer[] {
+    return !signers?.length ? [this.buildSigner(defaultAccount)] : signers.map(s => this.buildSigner(defaultAccount, s))
   }
 }
