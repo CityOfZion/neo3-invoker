@@ -69,3 +69,6 @@ common/autoinstallers/*/.npmrc
 
 # IDE
 /.idea/
+
+#.lock
+yarn.lock
