@@ -4,7 +4,7 @@ import * as Neon from '@cityofzion/neon-core'
 import { wallet } from '@cityofzion/neon-core'
 import { CommonConfig } from '@cityofzion/neon-js/lib/experimental/types'
 
-export type RpcConfig = {
+export type BuildTransactionInput = {
   rpcAddress: string
   networkMagic: number
 }
@@ -20,7 +20,7 @@ export class NeonInvoker implements Neo3Invoker {
   static MAINNET = 'https://mainnet1.neo.coz.io:443'
   static TESTNET = 'https://testnet1.neo.coz.io:443'
 
-  private constructor(public rpcConfig: RpcConfig, public account: wallet.Account | undefined) {
+  private constructor(public rpcConfig: BuildTransactionInput, public account: wallet.Account | undefined) {
   }
 
   static async init(rpcAddress: string, account?: wallet.Account): Promise<NeonInvoker> {
@@ -86,26 +86,31 @@ export class NeonInvoker implements Neo3Invoker {
 
     const currentHeight = await rpcClient.getBlockCount()
 
-    const trx = NeonInvoker.buildTransaction({ account: this.account, script, signers: cim.signers, validUntilBlock: currentHeight + 100 })
+    const trx = NeonInvoker.buildTransaction({
+      account: this.account,
+      script,
+      signers: cim.signers,
+      validUntilBlock: currentHeight + 100
+    })
 
     const config = {
       ...this.rpcConfig,
       account: this.account,
     }
 
-    const systemFeeOverride = await NeonInvoker.addSystemFeeOverride(config, trx, cim)
+    const systemFeeOverride = await NeonInvoker.overrideSystemFeeOnTransaction(trx, config, cim)
 
-    const networkFeeOverride = await NeonInvoker.addNetworkFeeOverride(config, trx, cim, this.account)
+    const networkFeeOverride = await NeonInvoker.overrideNetworkFeeOnTransaction(trx, config, cim, this.account)
 
-    await NeonInvoker.addFees(trx, {
+    await NeonInvoker.addFeesToTransaction(trx, {
       ...config,
       systemFeeOverride,
       networkFeeOverride,
     })
 
-    NeonInvoker.signTransaction(trx, this.account, this.rpcConfig.networkMagic)
+    this.signTransaction(trx)
 
-    return await NeonInvoker.sendTransaction(trx, this.rpcConfig.rpcAddress)
+    return await this.sendTransaction(trx)
   }
 
   static buildTransaction({ script, validUntilBlock, account, signers }: BuildTransaction) {
@@ -116,7 +121,7 @@ export class NeonInvoker implements Neo3Invoker {
     })
   }
 
-  static async addSystemFeeOverride(config: CommonConfig, trx: Neon.tx.Transaction, cim: ContractInvocationMulti) {
+  static async overrideSystemFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti) {
     const systemFeeOverride = cim.systemFeeOverride
       ? u.BigInteger.fromNumber(cim.systemFeeOverride)
       : cim.extraSystemFee
@@ -125,7 +130,7 @@ export class NeonInvoker implements Neo3Invoker {
     return systemFeeOverride
   }
 
-  static async addNetworkFeeOverride(config: CommonConfig, trx: Neon.tx.Transaction, cim: ContractInvocationMulti, account: wallet.Account) {
+  static async overrideNetworkFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti, account: wallet.Account) {
     const networkFeeOverride = cim.networkFeeOverride
       ? u.BigInteger.fromNumber(cim.networkFeeOverride)
       : cim.extraNetworkFee
@@ -134,16 +139,16 @@ export class NeonInvoker implements Neo3Invoker {
     return networkFeeOverride
   }
 
-  static async addFees(trx: Neon.tx.Transaction, config: CommonConfig) {
+  static async addFeesToTransaction(trx: Neon.tx.Transaction, config: CommonConfig) {
     return await experimental.txHelpers.addFees(trx, config)
   }
 
-  static signTransaction(trx: Neon.tx.Transaction, account: wallet.Account, networkMagic: number){
-    return trx.sign(account, networkMagic)
+  signTransaction(trx: Neon.tx.Transaction) {
+    return trx.sign(this.account, this.rpcConfig.networkMagic)
   }
 
-  static async sendTransaction(trx: Neon.tx.Transaction, rpcAddress: string) {
-    const rpcClient = new rpc.RPCClient(rpcAddress)
+  async sendTransaction(trx: Neon.tx.Transaction) {
+    const rpcClient = new rpc.RPCClient(this.rpcConfig.rpcAddress)
     return await rpcClient.sendRawTransaction(trx)
   }
 
