@@ -67,25 +67,54 @@ class NeonInvoker {
             const script = sb.build();
             const rpcClient = new neon_js_1.rpc.RPCClient(this.rpcConfig.rpcAddress);
             const currentHeight = yield rpcClient.getBlockCount();
-            const trx = new neon_js_1.tx.Transaction({
-                script: neon_js_1.u.HexString.fromHex(script),
-                validUntilBlock: currentHeight + 100,
-                signers: NeonInvoker.buildMultipleSigner(this.account, cim.signers),
-            });
+            const trx = this.buildTransaction(script, currentHeight + 100, cim.signers);
             const config = Object.assign(Object.assign({}, this.rpcConfig), { account: this.account });
+            const systemFeeOverride = yield NeonInvoker.overrideSystemFeeOnTransaction(trx, config, cim);
+            const networkFeeOverride = yield this.overrideNetworkFeeOnTransaction(trx, config, cim);
+            yield NeonInvoker.addFeesToTransaction(trx, Object.assign(Object.assign({}, config), { systemFeeOverride,
+                networkFeeOverride }));
+            this.signTransaction(trx);
+            return yield this.sendTransaction(trx);
+        });
+    }
+    buildTransaction(script, validUntilBlock, signers) {
+        return new neon_js_1.tx.Transaction({
+            script: neon_js_1.u.HexString.fromHex(script),
+            validUntilBlock,
+            signers: NeonInvoker.buildMultipleSigner(this.account, signers)
+        });
+    }
+    static overrideSystemFeeOnTransaction(trx, config, cim) {
+        return __awaiter(this, void 0, void 0, function* () {
             const systemFeeOverride = cim.systemFeeOverride
                 ? neon_js_1.u.BigInteger.fromNumber(cim.systemFeeOverride)
                 : cim.extraSystemFee
                     ? (yield neon_js_1.experimental.txHelpers.getSystemFee(trx.script, config, trx.signers)).add(cim.extraSystemFee)
                     : undefined;
+            return systemFeeOverride;
+        });
+    }
+    overrideNetworkFeeOnTransaction(trx, config, cim) {
+        return __awaiter(this, void 0, void 0, function* () {
             const networkFeeOverride = cim.networkFeeOverride
                 ? neon_js_1.u.BigInteger.fromNumber(cim.networkFeeOverride)
                 : cim.extraNetworkFee
                     ? (yield neon_js_1.experimental.txHelpers.calculateNetworkFee(trx, this.account, config)).add(cim.extraNetworkFee)
                     : undefined;
-            yield neon_js_1.experimental.txHelpers.addFees(trx, Object.assign(Object.assign({}, config), { systemFeeOverride,
-                networkFeeOverride }));
-            trx.sign(this.account, this.rpcConfig.networkMagic);
+            return networkFeeOverride;
+        });
+    }
+    static addFeesToTransaction(trx, config) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield neon_js_1.experimental.txHelpers.addFees(trx, config);
+        });
+    }
+    signTransaction(trx) {
+        return trx.sign(this.account, this.rpcConfig.networkMagic);
+    }
+    sendTransaction(trx) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const rpcClient = new neon_js_1.rpc.RPCClient(this.rpcConfig.rpcAddress);
             return yield rpcClient.sendRawTransaction(trx);
         });
     }
