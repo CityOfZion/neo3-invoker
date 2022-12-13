@@ -2,6 +2,7 @@ import { ContractInvocationMulti, Signer, Neo3Invoker, Arg, InvokeResult } from 
 import { tx, u, rpc, sc, experimental } from '@cityofzion/neon-js'
 import * as Neon from '@cityofzion/neon-core'
 import { wallet } from '@cityofzion/neon-core'
+import { CommonConfig } from '@cityofzion/neon-js/lib/experimental/types'
 
 export type RpcConfig = {
   rpcAddress: string
@@ -12,15 +13,15 @@ export class NeonInvoker implements Neo3Invoker {
   static MAINNET = 'https://mainnet1.neo.coz.io:443'
   static TESTNET = 'https://testnet1.neo.coz.io:443'
 
-  private constructor (public rpcConfig: RpcConfig, public account: wallet.Account | undefined) {
+  private constructor(public rpcConfig: RpcConfig, public account: wallet.Account | undefined) {
   }
 
-  static async init (rpcAddress: string, account?: wallet.Account): Promise<NeonInvoker> {
+  static async init(rpcAddress: string, account?: wallet.Account): Promise<NeonInvoker> {
     const networkMagic = await this.getMagicOfRpcAddress(rpcAddress)
     return new NeonInvoker({ rpcAddress, networkMagic }, account)
   }
 
-  static async getMagicOfRpcAddress (rpcAddress: string): Promise<number> {
+  static async getMagicOfRpcAddress(rpcAddress: string): Promise<number> {
     const resp: any = await new rpc.RPCClient(rpcAddress).execute(
       new rpc.Query({
         method: 'getversion',
@@ -33,7 +34,7 @@ export class NeonInvoker implements Neo3Invoker {
     return resp.protocol.network
   }
 
-  async testInvoke (
+  async testInvoke(
     cim: ContractInvocationMulti
   ): Promise<InvokeResult> {
     const sb = new sc.ScriptBuilder()
@@ -57,7 +58,7 @@ export class NeonInvoker implements Neo3Invoker {
     )
   }
 
-  async invokeFunction (cim: ContractInvocationMulti): Promise<string> {
+  async invokeFunction(cim: ContractInvocationMulti): Promise<string> {
     const sb = new sc.ScriptBuilder()
 
     cim.invocations.forEach(c => {
@@ -78,41 +79,72 @@ export class NeonInvoker implements Neo3Invoker {
 
     const currentHeight = await rpcClient.getBlockCount()
 
-    const trx = new tx.Transaction({
-      script: u.HexString.fromHex(script),
-      validUntilBlock: currentHeight + 100,
-      signers: NeonInvoker.buildMultipleSigner(this.account, cim.signers),
-    })
+    const trx = this.buildTransaction(
+      script,
+      currentHeight + 100,
+      cim.signers
+    )
 
     const config = {
       ...this.rpcConfig,
       account: this.account,
     }
 
-    const systemFeeOverride = cim.systemFeeOverride
-      ? u.BigInteger.fromNumber(cim.systemFeeOverride)
-      : cim.extraSystemFee
-        ? (await experimental.txHelpers.getSystemFee(trx.script, config, trx.signers)).add(cim.extraSystemFee)
-        : undefined
+    const systemFeeOverride = await NeonInvoker.overrideSystemFeeOnTransaction(trx, config, cim)
 
-    const networkFeeOverride = cim.networkFeeOverride
-      ? u.BigInteger.fromNumber(cim.networkFeeOverride)
-      : cim.extraNetworkFee
-        ? (await experimental.txHelpers.calculateNetworkFee(trx, this.account, config)).add(cim.extraNetworkFee)
-        : undefined
+    const networkFeeOverride = await this.overrideNetworkFeeOnTransaction(trx, config, cim)
 
-    await experimental.txHelpers.addFees(trx, {
+    await NeonInvoker.addFeesToTransaction(trx, {
       ...config,
       systemFeeOverride,
       networkFeeOverride,
     })
 
-    trx.sign(this.account, this.rpcConfig.networkMagic)
+    this.signTransaction(trx)
 
+    return await this.sendTransaction(trx)
+  }
+
+  buildTransaction(script: string, validUntilBlock: number, signers: Signer[]) {
+    return new tx.Transaction({
+      script: u.HexString.fromHex(script),
+      validUntilBlock,
+      signers: NeonInvoker.buildMultipleSigner(this.account, signers)
+    })
+  }
+
+  static async overrideSystemFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti) {
+    const systemFeeOverride = cim.systemFeeOverride
+      ? u.BigInteger.fromNumber(cim.systemFeeOverride)
+      : cim.extraSystemFee
+        ? (await experimental.txHelpers.getSystemFee(trx.script, config, trx.signers)).add(cim.extraSystemFee)
+        : undefined
+    return systemFeeOverride
+  }
+
+  async overrideNetworkFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti) {
+    const networkFeeOverride = cim.networkFeeOverride
+      ? u.BigInteger.fromNumber(cim.networkFeeOverride)
+      : cim.extraNetworkFee
+        ? (await experimental.txHelpers.calculateNetworkFee(trx, this.account, config)).add(cim.extraNetworkFee)
+        : undefined
+    return networkFeeOverride
+  }
+
+  static async addFeesToTransaction(trx: Neon.tx.Transaction, config: CommonConfig) {
+    return await experimental.txHelpers.addFees(trx, config)
+  }
+
+  signTransaction(trx: Neon.tx.Transaction) {
+    return trx.sign(this.account, this.rpcConfig.networkMagic)
+  }
+
+  async sendTransaction(trx: Neon.tx.Transaction) {
+    const rpcClient = new rpc.RPCClient(this.rpcConfig.rpcAddress)
     return await rpcClient.sendRawTransaction(trx)
   }
 
-  static convertParams (args: Arg[] | undefined): Neon.sc.ContractParam[] {
+  static convertParams(args: Arg[] | undefined): Neon.sc.ContractParam[] {
     return (args ?? []).map(a => {
       switch (a.type) {
         case 'Any': return sc.ContractParam.any(a.value)
@@ -131,7 +163,7 @@ export class NeonInvoker implements Neo3Invoker {
     })
   }
 
-  static buildSigner (defaultAccount: Neon.wallet.Account, signerEntry?: Signer): Neon.tx.Signer {
+  static buildSigner(defaultAccount: Neon.wallet.Account, signerEntry?: Signer): Neon.tx.Signer {
     let scopes = signerEntry?.scopes ?? 'CalledByEntry'
     if (typeof scopes === 'number') {
       scopes = Neon.tx.toString(scopes)
@@ -145,7 +177,7 @@ export class NeonInvoker implements Neo3Invoker {
     })
   }
 
-  static buildMultipleSigner (defaultAccount: Neon.wallet.Account, signers: Signer[] | undefined): Neon.tx.Signer[] {
+  static buildMultipleSigner(defaultAccount: Neon.wallet.Account, signers: Signer[] | undefined): Neon.tx.Signer[] {
     return !signers?.length ? [this.buildSigner(defaultAccount)] : signers.map(s => this.buildSigner(defaultAccount, s))
   }
 }
