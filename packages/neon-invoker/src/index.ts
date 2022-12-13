@@ -79,10 +79,9 @@ export class NeonInvoker implements Neo3Invoker {
 
     const currentHeight = await rpcClient.getBlockCount()
 
-    const trx = NeonInvoker.buildTransaction(
+    const trx = this.buildTransaction(
       script,
       currentHeight + 100,
-      this.account,
       cim.signers
     )
 
@@ -106,11 +105,11 @@ export class NeonInvoker implements Neo3Invoker {
     return await this.sendTransaction(trx)
   }
 
-  static buildTransaction(script: string, validUntilBlock: number, account: wallet.Account, signers: Signer[]) {
+  buildTransaction(script: string, validUntilBlock: number, signers: Signer[]) {
     return new tx.Transaction({
       script: u.HexString.fromHex(script),
       validUntilBlock,
-      signers: NeonInvoker.buildMultipleSigner(account, signers)
+      signers: NeonInvoker.buildMultipleSigner(this.account, signers)
     })
   }
 
