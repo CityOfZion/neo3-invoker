@@ -4,23 +4,16 @@ import * as Neon from '@cityofzion/neon-core'
 import { wallet } from '@cityofzion/neon-core'
 import { CommonConfig } from '@cityofzion/neon-js/lib/experimental/types'
 
-export type BuildTransactionInput = {
+export type RpcConfig = {
   rpcAddress: string
   networkMagic: number
-}
-
-export interface BuildTransaction {
-  script: string,
-  validUntilBlock: number,
-  account: wallet.Account,
-  signers: Signer[]
 }
 
 export class NeonInvoker implements Neo3Invoker {
   static MAINNET = 'https://mainnet1.neo.coz.io:443'
   static TESTNET = 'https://testnet1.neo.coz.io:443'
 
-  private constructor(public rpcConfig: BuildTransactionInput, public account: wallet.Account | undefined) {
+  private constructor(public rpcConfig: RpcConfig, public account: wallet.Account | undefined) {
   }
 
   static async init(rpcAddress: string, account?: wallet.Account): Promise<NeonInvoker> {
@@ -86,12 +79,12 @@ export class NeonInvoker implements Neo3Invoker {
 
     const currentHeight = await rpcClient.getBlockCount()
 
-    const trx = NeonInvoker.buildTransaction({
-      account: this.account,
+    const trx = NeonInvoker.buildTransaction(
       script,
-      signers: cim.signers,
-      validUntilBlock: currentHeight + 100
-    })
+      currentHeight + 100,
+      this.account,
+      cim.signers
+    )
 
     const config = {
       ...this.rpcConfig,
@@ -100,7 +93,7 @@ export class NeonInvoker implements Neo3Invoker {
 
     const systemFeeOverride = await NeonInvoker.overrideSystemFeeOnTransaction(trx, config, cim)
 
-    const networkFeeOverride = await NeonInvoker.overrideNetworkFeeOnTransaction(trx, config, cim, this.account)
+    const networkFeeOverride = await this.overrideNetworkFeeOnTransaction(trx, config, cim)
 
     await NeonInvoker.addFeesToTransaction(trx, {
       ...config,
@@ -113,7 +106,7 @@ export class NeonInvoker implements Neo3Invoker {
     return await this.sendTransaction(trx)
   }
 
-  static buildTransaction({ script, validUntilBlock, account, signers }: BuildTransaction) {
+  static buildTransaction(script: string, validUntilBlock: number, account: wallet.Account, signers: Signer[]) {
     return new tx.Transaction({
       script: u.HexString.fromHex(script),
       validUntilBlock,
@@ -130,11 +123,11 @@ export class NeonInvoker implements Neo3Invoker {
     return systemFeeOverride
   }
 
-  static async overrideNetworkFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti, account: wallet.Account) {
+  async overrideNetworkFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti) {
     const networkFeeOverride = cim.networkFeeOverride
       ? u.BigInteger.fromNumber(cim.networkFeeOverride)
       : cim.extraNetworkFee
-        ? (await experimental.txHelpers.calculateNetworkFee(trx, account, config)).add(cim.extraNetworkFee)
+        ? (await experimental.txHelpers.calculateNetworkFee(trx, this.account, config)).add(cim.extraNetworkFee)
         : undefined
     return networkFeeOverride
   }
