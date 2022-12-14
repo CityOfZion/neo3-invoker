@@ -1,5 +1,5 @@
 import { ContractInvocationMulti, Signer, Neo3Invoker, Arg, InvokeResult } from '@cityofzion/neo3-invoker'
-import { tx, u, rpc, sc, experimental } from '@cityofzion/neon-js'
+import { tx, u, rpc, sc, experimental, api } from '@cityofzion/neon-js'
 import * as Neon from '@cityofzion/neon-core'
 import { wallet } from '@cityofzion/neon-core'
 import { CommonConfig } from '@cityofzion/neon-js/lib/experimental/types'
@@ -9,12 +9,17 @@ export type RpcConfig = {
   networkMagic: number
 }
 
+export type CalculateFee = {
+  networkFee: Neon.u.BigInteger
+  systemFee: Neon.u.BigInteger
+  total: number
+}
+
 export class NeonInvoker implements Neo3Invoker {
   static MAINNET = 'https://mainnet1.neo.coz.io:443'
   static TESTNET = 'https://testnet1.neo.coz.io:443'
 
-  private constructor(public rpcConfig: RpcConfig, public account: wallet.Account | undefined) {
-  }
+  private constructor(public rpcConfig: RpcConfig, public account: wallet.Account | undefined) {}
 
   static async init(rpcAddress: string, account?: wallet.Account): Promise<NeonInvoker> {
     const networkMagic = await this.getMagicOfRpcAddress(rpcAddress)
@@ -34,24 +39,9 @@ export class NeonInvoker implements Neo3Invoker {
     return resp.protocol.network
   }
 
-  async testInvoke(
-    cim: ContractInvocationMulti
-  ): Promise<InvokeResult> {
-    const sb = new sc.ScriptBuilder()
+  async testInvoke(cim: ContractInvocationMulti): Promise<InvokeResult> {
+    const script = NeonInvoker.buildScriptBuilder(cim)
 
-    cim.invocations.forEach(c => {
-      sb.emitContractCall({
-        scriptHash: c.scriptHash,
-        operation: c.operation,
-        args: NeonInvoker.convertParams(c.args),
-      })
-
-      if (c.abortOnFail) {
-        sb.emit(0x39)
-      }
-    })
-
-    const script = sb.build()
     return await new rpc.RPCClient(this.rpcConfig.rpcAddress).invokeScript(
       u.HexString.fromHex(script),
       this.account ? NeonInvoker.buildMultipleSigner(this.account, cim.signers) : undefined
@@ -59,38 +49,20 @@ export class NeonInvoker implements Neo3Invoker {
   }
 
   async invokeFunction(cim: ContractInvocationMulti): Promise<string> {
-    const sb = new sc.ScriptBuilder()
-
-    cim.invocations.forEach(c => {
-      sb.emitContractCall({
-        scriptHash: c.scriptHash,
-        operation: c.operation,
-        args: NeonInvoker.convertParams(c.args),
-      })
-
-      if (c.abortOnFail) {
-        sb.emit(0x39)
-      }
-    })
-
-    const script = sb.build()
+    const script = NeonInvoker.buildScriptBuilder(cim)
 
     const rpcClient = new rpc.RPCClient(this.rpcConfig.rpcAddress)
 
     const currentHeight = await rpcClient.getBlockCount()
 
-    const trx = this.buildTransaction(
-      script,
-      currentHeight + 100,
-      cim.signers
-    )
+    const trx = this.buildTransaction(script, currentHeight + 100, cim.signers)
 
     const config = {
       ...this.rpcConfig,
       account: this.account,
     }
 
-    const systemFeeOverride = await NeonInvoker.overrideSystemFeeOnTransaction(trx, config, cim)
+    const systemFeeOverride = await this.overrideSystemFeeOnTransaction(trx, config, cim)
 
     const networkFeeOverride = await this.overrideNetworkFeeOnTransaction(trx, config, cim)
 
@@ -105,34 +77,39 @@ export class NeonInvoker implements Neo3Invoker {
     return await this.sendTransaction(trx)
   }
 
+  async calculateFee(cim: ContractInvocationMulti): Promise<CalculateFee> {
+    const script = NeonInvoker.buildScriptBuilder(cim)
+
+    const rpcClient = new rpc.RPCClient(this.rpcConfig.rpcAddress)
+
+    const currentHeight = await rpcClient.getBlockCount()
+
+    const transation = this.buildTransaction(script, currentHeight + 100, cim.signers)
+
+    this.signTransaction(transation)
+
+    const networkFee = await api.smartCalculateNetworkFee(transation, rpcClient)
+
+    const { gasconsumed } = await rpcClient.invokeScript(
+      u.HexString.fromHex(script),
+      this.account ? NeonInvoker.buildMultipleSigner(this.account, cim.signers) : undefined
+    )
+
+    const systemFee = u.BigInteger.fromNumber(gasconsumed)
+
+    return {
+      networkFee,
+      systemFee,
+      total: Number(networkFee.add(systemFee).toDecimal(8)),
+    }
+  }
+
   buildTransaction(script: string, validUntilBlock: number, signers: Signer[]) {
     return new tx.Transaction({
       script: u.HexString.fromHex(script),
       validUntilBlock,
-      signers: NeonInvoker.buildMultipleSigner(this.account, signers)
+      signers: NeonInvoker.buildMultipleSigner(this.account, signers),
     })
-  }
-
-  static async overrideSystemFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti) {
-    const systemFeeOverride = cim.systemFeeOverride
-      ? u.BigInteger.fromNumber(cim.systemFeeOverride)
-      : cim.extraSystemFee
-        ? (await experimental.txHelpers.getSystemFee(trx.script, config, trx.signers)).add(cim.extraSystemFee)
-        : undefined
-    return systemFeeOverride
-  }
-
-  async overrideNetworkFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti) {
-    const networkFeeOverride = cim.networkFeeOverride
-      ? u.BigInteger.fromNumber(cim.networkFeeOverride)
-      : cim.extraNetworkFee
-        ? (await experimental.txHelpers.calculateNetworkFee(trx, this.account, config)).add(cim.extraNetworkFee)
-        : undefined
-    return networkFeeOverride
-  }
-
-  static async addFeesToTransaction(trx: Neon.tx.Transaction, config: CommonConfig) {
-    return await experimental.txHelpers.addFees(trx, config)
   }
 
   signTransaction(trx: Neon.tx.Transaction) {
@@ -144,21 +121,70 @@ export class NeonInvoker implements Neo3Invoker {
     return await rpcClient.sendRawTransaction(trx)
   }
 
+  static buildScriptBuilder(cim: ContractInvocationMulti): string {
+    const sb = new sc.ScriptBuilder()
+
+    cim.invocations.forEach(c => {
+      sb.emitContractCall({
+        scriptHash: c.scriptHash,
+        operation: c.operation,
+        args: NeonInvoker.convertParams(c.args),
+      })
+
+      if (c.abortOnFail) {
+        sb.emit(0x39)
+      }
+    })
+
+    return sb.build()
+  }
+
+  async overrideSystemFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti) {
+    const systemFeeOverride = cim.systemFeeOverride
+      ? u.BigInteger.fromNumber(cim.systemFeeOverride)
+      : cim.extraSystemFee
+      ? (await experimental.txHelpers.getSystemFee(trx.script, config, trx.signers)).add(cim.extraSystemFee)
+      : undefined
+    return systemFeeOverride
+  }
+
+  async overrideNetworkFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti) {
+    const networkFeeOverride = cim.networkFeeOverride
+      ? u.BigInteger.fromNumber(cim.networkFeeOverride)
+      : cim.extraNetworkFee
+      ? (await experimental.txHelpers.calculateNetworkFee(trx, this.account, config)).add(cim.extraNetworkFee)
+      : undefined
+    return networkFeeOverride
+  }
+
+  static async addFeesToTransaction(trx: Neon.tx.Transaction, config: CommonConfig) {
+    return await experimental.txHelpers.addFees(trx, config)
+  }
+
   static convertParams(args: Arg[] | undefined): Neon.sc.ContractParam[] {
     return (args ?? []).map(a => {
       switch (a.type) {
-        case 'Any': return sc.ContractParam.any(a.value)
-        case 'String': return sc.ContractParam.string(a.value ?? '')
-        case 'Boolean': return sc.ContractParam.boolean(a.value ?? false)
-        case 'PublicKey': return sc.ContractParam.publicKey(a.value ?? '')
+        case 'Any':
+          return sc.ContractParam.any(a.value)
+        case 'String':
+          return sc.ContractParam.string(a.value ?? '')
+        case 'Boolean':
+          return sc.ContractParam.boolean(a.value ?? false)
+        case 'PublicKey':
+          return sc.ContractParam.publicKey(a.value ?? '')
         case 'Address':
         case 'Hash160':
           return sc.ContractParam.hash160(a.value ?? '')
-        case 'Hash256': return sc.ContractParam.hash256(a.value ?? '')
-        case 'Integer': return sc.ContractParam.integer(a.value ?? '')
-        case 'ScriptHash': return sc.ContractParam.hash160(Neon.u.HexString.fromHex(a.value ?? ''))
-        case 'Array': return sc.ContractParam.array(...this.convertParams((a.value ?? []) as Arg[]))
-        case 'ByteArray': return sc.ContractParam.byteArray(a.value ?? '')
+        case 'Hash256':
+          return sc.ContractParam.hash256(a.value ?? '')
+        case 'Integer':
+          return sc.ContractParam.integer(a.value ?? '')
+        case 'ScriptHash':
+          return sc.ContractParam.hash160(Neon.u.HexString.fromHex(a.value ?? ''))
+        case 'Array':
+          return sc.ContractParam.array(...this.convertParams((a.value ?? []) as Arg[]))
+        case 'ByteArray':
+          return sc.ContractParam.byteArray(a.value ?? '')
       }
     })
   }
@@ -173,7 +199,7 @@ export class NeonInvoker implements Neo3Invoker {
       account: signerEntry?.account ?? defaultAccount.scriptHash,
       allowedcontracts: signerEntry?.allowedContracts,
       allowedgroups: signerEntry?.allowedGroups,
-      rules: signerEntry?.rules
+      rules: signerEntry?.rules,
     })
   }
 
