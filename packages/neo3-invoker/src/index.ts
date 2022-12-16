@@ -1,47 +1,47 @@
 export interface BooleanWitnessCondition {
-  type: "Boolean"
+  type: 'Boolean'
   expression: boolean
 }
 
 export interface NotWitnessCondition {
-  type: "Not"
+  type: 'Not'
   expression: WitnessCondition
 }
 
 export interface AndWitnessCondition {
-  type: "And"
+  type: 'And'
   expressions: WitnessCondition[]
 }
 
 export interface OrWitnessCondition {
-  type: "Or"
+  type: 'Or'
   expressions: WitnessCondition[]
 }
 
 export interface ScriptHashWitnessCondition {
-  type: "ScriptHash"
+  type: 'ScriptHash'
   // Scripthash
   hash: string
 }
 
 export interface GroupWitnessCondition {
-  type: "Group"
+  type: 'Group'
   // Public key
   group: string
 }
 
 export interface CalledByEntryWitnessCondition {
-  type: "CalledByEntry"
+  type: 'CalledByEntry'
 }
 
 export interface CalledByContractWitnessCondition {
-  type: "CalledByContract"
+  type: 'CalledByContract'
   // Scripthash
   hash: string
 }
 
 export interface CalledByGroupWitnessCondition {
-  type: "CalledByGroup"
+  type: 'CalledByGroup'
   // Public key
   group: string
 }
@@ -96,8 +96,19 @@ export type Signer = {
   rules?: WitnessRule[]
 }
 
-export type ArgType = 'Any' | 'String' | 'Boolean' | 'PublicKey' | 'Address' | 'Hash160' | 'Hash256' | 'Integer' | 'ScriptHash' | 'Array' | 'ByteArray'
-export type Arg = { type: ArgType, value: any }
+export type ArgType =
+  | 'Any'
+  | 'String'
+  | 'Boolean'
+  | 'PublicKey'
+  | 'Address'
+  | 'Hash160'
+  | 'Hash256'
+  | 'Integer'
+  | 'ScriptHash'
+  | 'Array'
+  | 'ByteArray'
+export type Arg = { type: ArgType; value: any }
 
 /**
  * A simple interface that defines the invocation options
@@ -161,41 +172,53 @@ export declare enum StackItemType {
   Array = 64,
   Struct = 65,
   Map = 72,
-  InteropInterface = 96
+  InteropInterface = 96,
+}
+
+export interface StackItemInteropInterfaceJson extends StackItemJson {
+  type: Extract<keyof typeof StackItemType, 'InteropInterface'>
+  interface: 'IIterator'
+  id: string
+  value: undefined
 }
 
 export interface StackItemJson {
   type: keyof typeof StackItemType
   value?: string | boolean | number | StackItemJson[]
+
+  /** These properties comes when the invoke result is a iterator. You need to call the traverseIterator method to get the real result */
+  interface?: string
+  id?: string
 }
 
 /**
  * Result from calling invokescript or invokefunction.
  */
-export interface InvokeResult {
+export interface InvokeResult<T extends StackItemJson = StackItemJson> {
   /** The script that is sent for execution on the blockchain as a base64 string. */
   script: string
   /** State of VM on exit. HALT means a successful exit while FAULT means exit with error. */
-  state: "HALT" | "FAULT"
+  state: 'HALT' | 'FAULT'
   /** Amount of gas consumed up to the point of stopping in the VM. If state is FAULT, this value is not representative of the amount of gas it will consume if it somehow succeeds on the blockchain.
    * This is a decimal value.
    */
   gasconsumed: string
   /** A human-readable string clarifying the exception that occurred. Only available when state is "FAULT". */
   exception: string | null
-  stack: StackItemJson[]
+  stack: T[]
   /** A ready to send transaction that wraps the script.
    * Only available when signers are provided and the sender's private key is open in the RPC node.
    * Formatted in base64-encoding.
    */
   tx?: string
+  /** This properties comes when the invoke result is a iterator. You need to call the traverseIterator method to get the real result */
+  session?: string
 }
 
 /**
  * The entry point for the SmartContract invocation
  */
 export interface Neo3Invoker {
-
   /**
    * Sends an 'invokeFunction' request to the Wallet and it will communicate with the blockchain. It will consume gas and persist data to the blockchain.
    *
@@ -280,4 +303,14 @@ export interface Neo3Invoker {
    * @return the call result promise
    */
   testInvoke: (cim: ContractInvocationMulti) => Promise<InvokeResult>
+
+  /**
+   * Call the method traverseiterator on the rpc. This method is used to get the result of an iterator.
+   * The result is the first count of data traversed in the Iterator, and follow-up requests will continue traversing from count + 1
+   * @param sessionId the session id of the iterator
+   * @param iteratorId the iterator id
+   * @param count the number of items to retrieve
+   * @return the call result promise
+   */
+  traverseIterator: (sessionId: string, iteratorId: string, count: number) => Promise<StackItemJson[]>
 }
