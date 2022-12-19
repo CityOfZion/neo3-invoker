@@ -16,8 +16,8 @@ importers:
   ../../packages/neon-invoker:
     specifiers:
       '@cityofzion/neo3-invoker': ^1.1.0
-      '@cityofzion/neon-core': ^5.2.0
-      '@cityofzion/neon-js': ^5.2.0
+      '@cityofzion/neon-core': ^5.3.0
+      '@cityofzion/neon-js': ^5.3.0
       '@types/expect': ^24.3.0
       '@types/mocha': ^10.0.0
       mocha: ^10.0.0
@@ -25,8 +25,8 @@ importers:
       typescript: ^4.3.2
     dependencies:
       '@cityofzion/neo3-invoker': 1.1.0
-      '@cityofzion/neon-core': 5.2.0
-      '@cityofzion/neon-js': 5.2.0
+      '@cityofzion/neon-core': 5.3.0
+      '@cityofzion/neon-js': 5.3.0
     devDependencies:
       '@types/expect': 24.3.0
       '@types/mocha': 10.0.0
@@ -61,16 +61,16 @@ packages:
     resolution: {integrity: sha512-Jrhrg4w8d2iPe2pIOuS2UQnaveKOcHSKnTuNwLLaOtKXw/13BTk3tU2RRvNQNLpszJUzIF3UU2v0O8xEC1wwSg==}
     dev: false
 
-  /@cityofzion/neon-api/5.2.0_@cityofzion+neon-core@5.2.0:
-    resolution: {integrity: sha512-vKsVMd1kkUg/7NlJvy/5JEYJzIZjJUrGnwKyEh9xTHP7iFlw/p7Cd83/iLH9kquViZKvtG+0WdnKxsSpqu7FXQ==}
+  /@cityofzion/neon-api/5.2.2_@cityofzion+neon-core@5.3.0:
+    resolution: {integrity: sha512-zNaGI+0C3r/w0olV6cpbdl1OarvX/Qen8bnEO3Xlqybc8uswu0AoL/mhfjXPFd75UkWmQTC7JCziKQULTfLblg==}
     peerDependencies:
       '@cityofzion/neon-core': ^5.0.0
     dependencies:
-      '@cityofzion/neon-core': 5.2.0
+      '@cityofzion/neon-core': 5.3.0
     dev: false
 
-  /@cityofzion/neon-core/5.2.0:
-    resolution: {integrity: sha512-wGlZJduEXt4Ar1VuP0+x/RzNvkG83isfHk+yF2+uS+BjJ6LwZzm1Z0hnIaj54+YqeygWHktHouCHNnnbghdx7w==}
+  /@cityofzion/neon-core/5.3.0:
+    resolution: {integrity: sha512-iOHY7rFuDZavH87klFIxOYpu3PnPm6pS1xY7qhkFrRtcuTqRBMzhoZstE70XLDh01ujC5y2+gXvgz4OOpzgdXQ==}
     engines: {node: '>=14.0.0'}
     dependencies:
       abort-controller: 3.0.0
@@ -88,11 +88,11 @@ packages:
       - encoding
     dev: false
 
-  /@cityofzion/neon-js/5.2.0:
-    resolution: {integrity: sha512-49z9WkeD7JmDrlOapXlak5rIS6PtWCCOiREkS5+ynCOTOe6HP4qi3qOkV/BoebQpb25TdEgGB1qlPGoogWt2zQ==}
+  /@cityofzion/neon-js/5.3.0:
+    resolution: {integrity: sha512-mtKBtYJoTJjJFnGw6Lrlo0OU2XGfPR4w71XIFfDfmoroadbRrZdVDn8KLhuJRXJP+atYJB3f0DmW6e6Ptp0M6g==}
     dependencies:
-      '@cityofzion/neon-api': 5.2.0_@cityofzion+neon-core@5.2.0
-      '@cityofzion/neon-core': 5.2.0
+      '@cityofzion/neon-api': 5.2.2_@cityofzion+neon-core@5.3.0
+      '@cityofzion/neon-core': 5.3.0
     transitivePeerDependencies:
       - encoding
     dev: false
