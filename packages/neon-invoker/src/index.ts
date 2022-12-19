@@ -1,7 +1,6 @@
 import { ContractInvocationMulti, Signer, Neo3Invoker, Arg, InvokeResult } from '@cityofzion/neo3-invoker'
-import { tx, u, rpc, sc, experimental, api } from '@cityofzion/neon-js'
-import * as Neon from '@cityofzion/neon-core'
-import { wallet } from '@cityofzion/neon-core'
+import { experimental, api } from '@cityofzion/neon-js'
+import Neon, { tx, u, rpc, sc, wallet } from '@cityofzion/neon-core'
 import { CommonConfig } from '@cityofzion/neon-js/lib/experimental/types'
 
 export type RpcConfig = {
@@ -102,6 +101,10 @@ export class NeonInvoker implements Neo3Invoker {
       systemFee,
       total: Number(networkFee.add(systemFee).toDecimal(8)),
     }
+  }
+
+  async traverseIterator(sessionId: string, iteratorId: string, count: number) {
+    return await new rpc.RPCClient(this.rpcConfig.rpcAddress).traverseIterator(sessionId, iteratorId, count)
   }
 
   buildTransaction(script: string, validUntilBlock: number, signers: Signer[]) {
