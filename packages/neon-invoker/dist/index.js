@@ -34,7 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NeonInvoker = void 0;
 const neon_js_1 = require("@cityofzion/neon-js");
-const neon_core_1 = __importStar(require("@cityofzion/neon-core"));
+const Neon = __importStar(require("@cityofzion/neon-core"));
 class NeonInvoker {
     constructor(rpcConfig, account) {
         this.rpcConfig = rpcConfig;
@@ -48,7 +48,7 @@ class NeonInvoker {
     }
     static getMagicOfRpcAddress(rpcAddress) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resp = yield new neon_core_1.rpc.RPCClient(rpcAddress).execute(new neon_core_1.rpc.Query({
+            const resp = yield new neon_js_1.rpc.RPCClient(rpcAddress).execute(new neon_js_1.rpc.Query({
                 method: 'getversion',
                 params: [],
                 id: 1,
@@ -60,13 +60,13 @@ class NeonInvoker {
     testInvoke(cim) {
         return __awaiter(this, void 0, void 0, function* () {
             const script = NeonInvoker.buildScriptBuilder(cim);
-            return yield new neon_core_1.rpc.RPCClient(this.rpcConfig.rpcAddress).invokeScript(neon_core_1.u.HexString.fromHex(script), this.account ? NeonInvoker.buildMultipleSigner(this.account, cim.signers) : undefined);
+            return yield new neon_js_1.rpc.RPCClient(this.rpcConfig.rpcAddress).invokeScript(neon_js_1.u.HexString.fromHex(script), this.account ? NeonInvoker.buildMultipleSigner(this.account, cim.signers) : undefined);
         });
     }
     invokeFunction(cim) {
         return __awaiter(this, void 0, void 0, function* () {
             const script = NeonInvoker.buildScriptBuilder(cim);
-            const rpcClient = new neon_core_1.rpc.RPCClient(this.rpcConfig.rpcAddress);
+            const rpcClient = new neon_js_1.rpc.RPCClient(this.rpcConfig.rpcAddress);
             const currentHeight = yield rpcClient.getBlockCount();
             const trx = this.buildTransaction(script, currentHeight + 100, cim.signers);
             const config = Object.assign(Object.assign({}, this.rpcConfig), { account: this.account });
@@ -81,13 +81,13 @@ class NeonInvoker {
     calculateFee(cim) {
         return __awaiter(this, void 0, void 0, function* () {
             const script = NeonInvoker.buildScriptBuilder(cim);
-            const rpcClient = new neon_core_1.rpc.RPCClient(this.rpcConfig.rpcAddress);
+            const rpcClient = new neon_js_1.rpc.RPCClient(this.rpcConfig.rpcAddress);
             const currentHeight = yield rpcClient.getBlockCount();
             const transation = this.buildTransaction(script, currentHeight + 100, cim.signers);
             this.signTransaction(transation);
             const networkFee = yield neon_js_1.api.smartCalculateNetworkFee(transation, rpcClient);
-            const { gasconsumed } = yield rpcClient.invokeScript(neon_core_1.u.HexString.fromHex(script), this.account ? NeonInvoker.buildMultipleSigner(this.account, cim.signers) : undefined);
-            const systemFee = neon_core_1.u.BigInteger.fromNumber(gasconsumed);
+            const { gasconsumed } = yield rpcClient.invokeScript(neon_js_1.u.HexString.fromHex(script), this.account ? NeonInvoker.buildMultipleSigner(this.account, cim.signers) : undefined);
+            const systemFee = neon_js_1.u.BigInteger.fromNumber(gasconsumed);
             return {
                 networkFee,
                 systemFee,
@@ -97,12 +97,13 @@ class NeonInvoker {
     }
     traverseIterator(sessionId, iteratorId, count) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield new neon_core_1.rpc.RPCClient(this.rpcConfig.rpcAddress).traverseIterator(sessionId, iteratorId, count);
+            const result = yield new neon_js_1.rpc.RPCClient(this.rpcConfig.rpcAddress).traverseIterator(sessionId, iteratorId, count);
+            return result.map((item) => ({ value: item.value, type: item.type }));
         });
     }
     buildTransaction(script, validUntilBlock, signers) {
-        return new neon_core_1.tx.Transaction({
-            script: neon_core_1.u.HexString.fromHex(script),
+        return new neon_js_1.tx.Transaction({
+            script: neon_js_1.u.HexString.fromHex(script),
             validUntilBlock,
             signers: NeonInvoker.buildMultipleSigner(this.account, signers),
         });
@@ -112,12 +113,12 @@ class NeonInvoker {
     }
     sendTransaction(trx) {
         return __awaiter(this, void 0, void 0, function* () {
-            const rpcClient = new neon_core_1.rpc.RPCClient(this.rpcConfig.rpcAddress);
+            const rpcClient = new neon_js_1.rpc.RPCClient(this.rpcConfig.rpcAddress);
             return yield rpcClient.sendRawTransaction(trx);
         });
     }
     static buildScriptBuilder(cim) {
-        const sb = new neon_core_1.sc.ScriptBuilder();
+        const sb = new neon_js_1.sc.ScriptBuilder();
         cim.invocations.forEach(c => {
             sb.emitContractCall({
                 scriptHash: c.scriptHash,
@@ -133,7 +134,7 @@ class NeonInvoker {
     overrideSystemFeeOnTransaction(trx, config, cim) {
         return __awaiter(this, void 0, void 0, function* () {
             const systemFeeOverride = cim.systemFeeOverride
-                ? neon_core_1.u.BigInteger.fromNumber(cim.systemFeeOverride)
+                ? neon_js_1.u.BigInteger.fromNumber(cim.systemFeeOverride)
                 : cim.extraSystemFee
                     ? (yield neon_js_1.experimental.txHelpers.getSystemFee(trx.script, config, trx.signers)).add(cim.extraSystemFee)
                     : undefined;
@@ -143,7 +144,7 @@ class NeonInvoker {
     overrideNetworkFeeOnTransaction(trx, config, cim) {
         return __awaiter(this, void 0, void 0, function* () {
             const networkFeeOverride = cim.networkFeeOverride
-                ? neon_core_1.u.BigInteger.fromNumber(cim.networkFeeOverride)
+                ? neon_js_1.u.BigInteger.fromNumber(cim.networkFeeOverride)
                 : cim.extraNetworkFee
                     ? (yield neon_js_1.experimental.txHelpers.calculateNetworkFee(trx, this.account, config)).add(cim.extraNetworkFee)
                     : undefined;
@@ -160,26 +161,26 @@ class NeonInvoker {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             switch (a.type) {
                 case 'Any':
-                    return neon_core_1.sc.ContractParam.any(a.value);
+                    return neon_js_1.sc.ContractParam.any(a.value);
                 case 'String':
-                    return neon_core_1.sc.ContractParam.string((_a = a.value) !== null && _a !== void 0 ? _a : '');
+                    return neon_js_1.sc.ContractParam.string((_a = a.value) !== null && _a !== void 0 ? _a : '');
                 case 'Boolean':
-                    return neon_core_1.sc.ContractParam.boolean((_b = a.value) !== null && _b !== void 0 ? _b : false);
+                    return neon_js_1.sc.ContractParam.boolean((_b = a.value) !== null && _b !== void 0 ? _b : false);
                 case 'PublicKey':
-                    return neon_core_1.sc.ContractParam.publicKey((_c = a.value) !== null && _c !== void 0 ? _c : '');
+                    return neon_js_1.sc.ContractParam.publicKey((_c = a.value) !== null && _c !== void 0 ? _c : '');
                 case 'Address':
                 case 'Hash160':
-                    return neon_core_1.sc.ContractParam.hash160((_d = a.value) !== null && _d !== void 0 ? _d : '');
+                    return neon_js_1.sc.ContractParam.hash160((_d = a.value) !== null && _d !== void 0 ? _d : '');
                 case 'Hash256':
-                    return neon_core_1.sc.ContractParam.hash256((_e = a.value) !== null && _e !== void 0 ? _e : '');
+                    return neon_js_1.sc.ContractParam.hash256((_e = a.value) !== null && _e !== void 0 ? _e : '');
                 case 'Integer':
-                    return neon_core_1.sc.ContractParam.integer((_f = a.value) !== null && _f !== void 0 ? _f : '');
+                    return neon_js_1.sc.ContractParam.integer((_f = a.value) !== null && _f !== void 0 ? _f : '');
                 case 'ScriptHash':
-                    return neon_core_1.sc.ContractParam.hash160(neon_core_1.default.u.HexString.fromHex((_g = a.value) !== null && _g !== void 0 ? _g : ''));
+                    return neon_js_1.sc.ContractParam.hash160(Neon.u.HexString.fromHex((_g = a.value) !== null && _g !== void 0 ? _g : ''));
                 case 'Array':
-                    return neon_core_1.sc.ContractParam.array(...this.convertParams(((_h = a.value) !== null && _h !== void 0 ? _h : [])));
+                    return neon_js_1.sc.ContractParam.array(...this.convertParams(((_h = a.value) !== null && _h !== void 0 ? _h : [])));
                 case 'ByteArray':
-                    return neon_core_1.sc.ContractParam.byteArray((_j = a.value) !== null && _j !== void 0 ? _j : '');
+                    return neon_js_1.sc.ContractParam.byteArray((_j = a.value) !== null && _j !== void 0 ? _j : '');
             }
         });
     }
@@ -187,9 +188,9 @@ class NeonInvoker {
         var _a, _b;
         let scopes = (_a = signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.scopes) !== null && _a !== void 0 ? _a : 'CalledByEntry';
         if (typeof scopes === 'number') {
-            scopes = neon_core_1.default.tx.toString(scopes);
+            scopes = Neon.tx.toString(scopes);
         }
-        return neon_core_1.tx.Signer.fromJson({
+        return neon_js_1.tx.Signer.fromJson({
             scopes,
             account: (_b = signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.account) !== null && _b !== void 0 ? _b : defaultAccount.scriptHash,
             allowedcontracts: signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.allowedContracts,
