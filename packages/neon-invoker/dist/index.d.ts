@@ -1,11 +1,11 @@
 import { ContractInvocationMulti, Signer, Neo3Invoker, Arg, InvokeResult, StackItemJson } from '@cityofzion/neo3-invoker';
 import * as Neon from '@cityofzion/neon-core';
 import { CommonConfig } from '@cityofzion/neon-js/lib/experimental/types';
-export type RpcConfig = {
+export declare type RpcConfig = {
     rpcAddress: string;
     networkMagic: number;
 };
-export type CalculateFee = {
+export declare type CalculateFee = {
     networkFee: Neon.u.BigInteger;
     systemFee: Neon.u.BigInteger;
     total: number;
