@@ -23,10 +23,10 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@cityofzion/neo3-invoker@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@cityofzion/neo3-invoker/-/neo3-invoker-1.1.0.tgz#f93828175f4d53f37ff6750f2e44c7ff28a91e22"
-  integrity sha512-Jrhrg4w8d2iPe2pIOuS2UQnaveKOcHSKnTuNwLLaOtKXw/13BTk3tU2RRvNQNLpszJUzIF3UU2v0O8xEC1wwSg==
+"@cityofzion/neo3-invoker@1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@cityofzion/neo3-invoker/-/neo3-invoker-1.3.0.tgz#c3cbdcb177e0296df8aa24e612734d6360807ba7"
+  integrity sha512-VoBaEjb6gxO6otL27WmyrzwhAUPUX5qev86yot+HZGbZ/tMh8FSkmFdVfOMIvb3C5nLZMj7kiPNlgr484kxqMQ==
 
 "@cityofzion/neon-api@^5.2.2":
   version "5.2.2"
@@ -126,9 +126,9 @@
   integrity sha512-/fvYntiO1GeICvqbQ3doGDIP97vWmvFt83GKguJ6prmQM2iXZfFcq6YE8KteFyRtX2/h5Hf91BYvPodJKFYv5Q==
 
 "@types/node@*":
-  version "18.11.15"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.11.15.tgz#de0e1fbd2b22b962d45971431e2ae696643d3f5d"
-  integrity sha512-VkhBbVo2+2oozlkdHXLrb3zjsRkpdnaU2bXmX8Wgle3PUi569eLRaHGlgETQHR7lLL1w7GiG3h9SnePhxNDecw==
+  version "18.11.17"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.11.17.tgz#5c009e1d9c38f4a2a9d45c0b0c493fe6cdb4bcb5"
+  integrity sha512-HJSUJmni4BeDHhfzn6nF0sVmd1SMezP7/4F0Lq+aXzmp2xm9O7WXrUtHW/CHlYVtZUbByEvWidHqRtcJXGF2Ng==
 
 "@types/stack-utils@^2.0.0":
   version "2.0.1"

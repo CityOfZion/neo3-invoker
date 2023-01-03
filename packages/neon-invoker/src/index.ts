@@ -1,6 +1,13 @@
-import { ContractInvocationMulti, Signer, Neo3Invoker, Arg, InvokeResult } from '@cityofzion/neo3-invoker'
-import { experimental, api } from '@cityofzion/neon-js'
-import Neon, { tx, u, rpc, sc, wallet } from '@cityofzion/neon-core'
+import {
+  ContractInvocationMulti,
+  Signer,
+  Neo3Invoker,
+  Arg,
+  InvokeResult,
+  StackItemJson,
+} from '@cityofzion/neo3-invoker'
+import { tx, u, rpc, sc, experimental, api } from '@cityofzion/neon-js'
+import * as Neon from '@cityofzion/neon-core'
 import { CommonConfig } from '@cityofzion/neon-js/lib/experimental/types'
 
 export type RpcConfig = {
@@ -18,9 +25,9 @@ export class NeonInvoker implements Neo3Invoker {
   static MAINNET = 'https://mainnet1.neo.coz.io:443'
   static TESTNET = 'https://testnet1.neo.coz.io:443'
 
-  private constructor(public rpcConfig: RpcConfig, public account: wallet.Account | undefined) {}
+  private constructor(public rpcConfig: RpcConfig, public account: Neon.wallet.Account | undefined) {}
 
-  static async init(rpcAddress: string, account?: wallet.Account): Promise<NeonInvoker> {
+  static async init(rpcAddress: string, account?: Neon.wallet.Account): Promise<NeonInvoker> {
     const networkMagic = await this.getMagicOfRpcAddress(rpcAddress)
     return new NeonInvoker({ rpcAddress, networkMagic }, account)
   }
@@ -103,8 +110,10 @@ export class NeonInvoker implements Neo3Invoker {
     }
   }
 
-  async traverseIterator(sessionId: string, iteratorId: string, count: number) {
-    return await new rpc.RPCClient(this.rpcConfig.rpcAddress).traverseIterator(sessionId, iteratorId, count)
+  async traverseIterator(sessionId: string, iteratorId: string, count: number): Promise<StackItemJson[]> {
+    const result = await new rpc.RPCClient(this.rpcConfig.rpcAddress).traverseIterator(sessionId, iteratorId, count)
+
+    return result.map((item): StackItemJson => ({ value: item.value as any, type: item.type as any }))
   }
 
   buildTransaction(script: string, validUntilBlock: number, signers: Signer[]) {
