@@ -1,14 +1,21 @@
 import { ContractInvocationMulti, Signer, Neo3Invoker, Arg, InvokeResult, StackItemJson } from '@cityofzion/neo3-invoker';
 import * as Neon from '@cityofzion/neon-core';
 import { CommonConfig } from '@cityofzion/neon-js/lib/experimental/types';
-export declare type RpcConfig = {
+export type RpcConfig = {
     rpcAddress: string;
     networkMagic: number;
 };
-export declare type CalculateFee = {
+export type CalculateFee = {
     networkFee: Neon.u.BigInteger;
     systemFee: Neon.u.BigInteger;
     total: number;
+};
+export type ExtendedArg = Arg | {
+    type: 'Address';
+    value: string;
+} | {
+    type: 'ScriptHash';
+    value: string;
 };
 export declare class NeonInvoker implements Neo3Invoker {
     rpcConfig: RpcConfig;
@@ -29,7 +36,7 @@ export declare class NeonInvoker implements Neo3Invoker {
     overrideSystemFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti): Promise<Neon.u.BigInteger>;
     overrideNetworkFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti): Promise<Neon.u.BigInteger>;
     static addFeesToTransaction(trx: Neon.tx.Transaction, config: CommonConfig): Promise<void>;
-    static convertParams(args: Arg[] | undefined): Neon.sc.ContractParam[];
+    static convertParams(args: ExtendedArg[] | undefined): Neon.sc.ContractParam[];
     static buildSigner(defaultAccount: Neon.wallet.Account, signerEntry?: Signer): Neon.tx.Signer;
     static buildMultipleSigner(defaultAccount: Neon.wallet.Account, signers: Signer[] | undefined): Neon.tx.Signer[];
 }

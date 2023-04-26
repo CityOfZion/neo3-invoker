@@ -158,29 +158,32 @@ class NeonInvoker {
     }
     static convertParams(args) {
         return (args !== null && args !== void 0 ? args : []).map(a => {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+            if (a.type === undefined)
+                throw new Error('Invalid argument type');
+            if (a.value === undefined)
+                throw new Error('Invalid argument value');
             switch (a.type) {
                 case 'Any':
                     return neon_js_1.sc.ContractParam.any(a.value);
                 case 'String':
-                    return neon_js_1.sc.ContractParam.string((_a = a.value) !== null && _a !== void 0 ? _a : '');
+                    return neon_js_1.sc.ContractParam.string(a.value);
                 case 'Boolean':
-                    return neon_js_1.sc.ContractParam.boolean((_b = a.value) !== null && _b !== void 0 ? _b : false);
+                    return neon_js_1.sc.ContractParam.boolean(a.value);
                 case 'PublicKey':
-                    return neon_js_1.sc.ContractParam.publicKey((_c = a.value) !== null && _c !== void 0 ? _c : '');
+                    return neon_js_1.sc.ContractParam.publicKey(a.value);
+                case 'ScriptHash':
+                    return neon_js_1.sc.ContractParam.hash160(Neon.u.HexString.fromHex(a.value));
                 case 'Address':
                 case 'Hash160':
-                    return neon_js_1.sc.ContractParam.hash160((_d = a.value) !== null && _d !== void 0 ? _d : '');
+                    return neon_js_1.sc.ContractParam.hash160(a.value);
                 case 'Hash256':
-                    return neon_js_1.sc.ContractParam.hash256((_e = a.value) !== null && _e !== void 0 ? _e : '');
+                    return neon_js_1.sc.ContractParam.hash256(a.value);
                 case 'Integer':
-                    return neon_js_1.sc.ContractParam.integer((_f = a.value) !== null && _f !== void 0 ? _f : '');
-                case 'ScriptHash':
-                    return neon_js_1.sc.ContractParam.hash160(Neon.u.HexString.fromHex((_g = a.value) !== null && _g !== void 0 ? _g : ''));
+                    return neon_js_1.sc.ContractParam.integer(a.value);
                 case 'Array':
-                    return neon_js_1.sc.ContractParam.array(...this.convertParams(((_h = a.value) !== null && _h !== void 0 ? _h : [])));
+                    return neon_js_1.sc.ContractParam.array(...this.convertParams(a.value));
                 case 'ByteArray':
-                    return neon_js_1.sc.ContractParam.byteArray((_j = a.value) !== null && _j !== void 0 ? _j : '');
+                    return neon_js_1.sc.ContractParam.byteArray(neon_js_1.u.hex2base64(a.value));
             }
         });
     }

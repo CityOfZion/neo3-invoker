@@ -96,19 +96,26 @@ export type Signer = {
   rules?: WitnessRule[]
 }
 
-export type ArgType =
-  | 'Any'
-  | 'String'
-  | 'Boolean'
-  | 'PublicKey'
-  | 'Address'
-  | 'Hash160'
-  | 'Hash256'
-  | 'Integer'
-  | 'ScriptHash'
-  | 'Array'
-  | 'ByteArray'
-export type Arg = { type: ArgType; value: any }
+export type AnyArgType = { type: 'Any'; value: any }
+export type StringArgType = { type: 'String'; value: string }
+export type BooleanArgType = { type: 'Boolean'; value: boolean }
+export type PublicKeyArgType = { type: 'PublicKey'; value: string }
+export type Hash160ArgType = { type: 'Hash160'; value: string }
+export type Hash256ArgType = { type: 'Hash256'; value: string }
+export type IntegerArgType = { type: 'Integer'; value: number | string }
+export type ArrayArgType = { type: 'Array'; value: Arg[] }
+export type ByteArrayArgType = { type: 'ByteArray'; value: string }
+
+export type Arg =
+  | AnyArgType
+  | StringArgType
+  | BooleanArgType
+  | PublicKeyArgType
+  | Hash160ArgType
+  | Hash256ArgType
+  | IntegerArgType
+  | ArrayArgType
+  | ByteArrayArgType
 
 /**
  * A simple interface that defines the invocation options

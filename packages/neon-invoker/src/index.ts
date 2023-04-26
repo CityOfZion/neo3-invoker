@@ -9,6 +9,7 @@ import {
 import { tx, u, rpc, sc, experimental, api } from '@cityofzion/neon-js'
 import * as Neon from '@cityofzion/neon-core'
 import { CommonConfig } from '@cityofzion/neon-js/lib/experimental/types'
+import { ContractParamType } from '@cityofzion/neon-core/lib/sc'
 
 export type RpcConfig = {
   rpcAddress: string
@@ -20,6 +21,8 @@ export type CalculateFee = {
   systemFee: Neon.u.BigInteger
   total: number
 }
+
+export type ExtendedArg = Arg | { type: 'Address'; value: string } | { type: 'ScriptHash'; value: string }
 
 export class NeonInvoker implements Neo3Invoker {
   static MAINNET = 'https://mainnet1.neo.coz.io:443'
@@ -173,30 +176,33 @@ export class NeonInvoker implements Neo3Invoker {
     return await experimental.txHelpers.addFees(trx, config)
   }
 
-  static convertParams(args: Arg[] | undefined): Neon.sc.ContractParam[] {
+  static convertParams(args: ExtendedArg[] | undefined): Neon.sc.ContractParam[] {
     return (args ?? []).map(a => {
+      if (a.type === undefined) throw new Error('Invalid argument type')
+      if (a.value === undefined) throw new Error('Invalid argument value')
+
       switch (a.type) {
         case 'Any':
           return sc.ContractParam.any(a.value)
         case 'String':
-          return sc.ContractParam.string(a.value ?? '')
+          return sc.ContractParam.string(a.value)
         case 'Boolean':
-          return sc.ContractParam.boolean(a.value ?? false)
+          return sc.ContractParam.boolean(a.value)
         case 'PublicKey':
-          return sc.ContractParam.publicKey(a.value ?? '')
+          return sc.ContractParam.publicKey(a.value)
+        case 'ScriptHash':
+          return sc.ContractParam.hash160(Neon.u.HexString.fromHex(a.value))
         case 'Address':
         case 'Hash160':
-          return sc.ContractParam.hash160(a.value ?? '')
+          return sc.ContractParam.hash160(a.value)
         case 'Hash256':
-          return sc.ContractParam.hash256(a.value ?? '')
+          return sc.ContractParam.hash256(a.value)
         case 'Integer':
-          return sc.ContractParam.integer(a.value ?? '')
-        case 'ScriptHash':
-          return sc.ContractParam.hash160(Neon.u.HexString.fromHex(a.value ?? ''))
+          return sc.ContractParam.integer(a.value)
         case 'Array':
-          return sc.ContractParam.array(...this.convertParams((a.value ?? []) as Arg[]))
+          return sc.ContractParam.array(...this.convertParams(a.value))
         case 'ByteArray':
-          return sc.ContractParam.byteArray(a.value ?? '')
+          return sc.ContractParam.byteArray(u.hex2base64(a.value))
       }
     })
   }
