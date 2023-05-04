@@ -27,7 +27,7 @@ npm i @cityofzion/neo3-invoker
 Checkout the auto-generated [Docs](https://htmlpreview.github.io/?https://raw.githubusercontent.com/CityOfZion/neo3-invoker/master/packages/neo3-invoker/docs/modules.html)
 based on the [Code](packages/neo3-invoker/src/index.ts).
 
-> If you are unsure about the expected value for each argument type, [Checkout these examples](packages/neo3-invoker/README.md#arguments-examples)
+> If you are unsure about the expected value for each argument type, [Checkout these examples](packages/neo3-invoker/README.MD#arguments-examples)
 
 ## Neon-Invoker
 
