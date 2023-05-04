@@ -20,14 +20,13 @@ Visit the [main page](../../README.md) of the project.
 
 ## Arguments examples:
 
-For these examples, we are starting from the point where an invoker has already been initialized.
+For these examples, we are starting from the point where an invoker has already been initialized and there is a `contractScriptHash` variable with the correct value.
 
 ### Any
 
 It is expecting to receive a string as value on args.
 
 ```ts
-const contractScriptHash = '0x0000000000000000000000000000000000000000'
 const anyValue = 'anything'
 invoker.testInvoke({
   invocations: [
@@ -45,7 +44,6 @@ invoker.testInvoke({
 It is expecting to receive an UTF-8 string as value on args.
 
 ```ts
-const contractScriptHash = '0x0000000000000000000000000000000000000000'
 const utfValue = 'UTF-8 string'
 invoker.testInvoke({
   invocations: [
@@ -63,7 +61,6 @@ invoker.testInvoke({
 It is expecting to receive a boolean as value on args.
 
 ```ts
-const contractScriptHash = '0x0000000000000000000000000000000000000000'
 const booleanValue = true
 invoker.testInvoke({
   invocations: [
@@ -81,7 +78,6 @@ invoker.testInvoke({
 It is expecting to receive a HEX string as value on args. Compressed or Uncompressed formats are allowed.
 
 ```ts
-const contractScriptHash = '0x0000000000000000000000000000000000000000'
 const compressedHexString = '035a928f201639204e06b4368b1a93365462a8ebbff0b8818151b74faab3a2b61a'
 invoker.testInvoke({
   invocations: [
@@ -93,7 +89,6 @@ invoker.testInvoke({
   ],
 })
 
-const contractScriptHash = '0x0000000000000000000000000000000000000000'
 const uncompressedHexString =
   '045a928f201639204e06b4368b1a93365462a8ebbff0b8818151b74faab3a2b61a35dfabcb79ac492a2a88588d2f2e73f045cd8af58059282e09d693dc340e113f'
 invoker.testInvoke({
@@ -113,7 +108,6 @@ It is expecting to receive a HEX as value on args. Automatically converts an add
 
 ```ts
 //Address
-const contractScriptHash = '0x0000000000000000000000000000000000000000'
 const addressValue = 'NNLi44dJNXtDNSBkofB48aTVYtb1zZrNEs'
 invoker.testInvoke({
   invocations: [
@@ -126,7 +120,6 @@ invoker.testInvoke({
 })
 
 //ScriptHash
-const contractScriptHash = '0x0000000000000000000000000000000000000000'
 const scriptHashValue = '0xa5de523ae9d99be784a536e9412b7a3cbe049e1a'
 invoker.testInvoke({
   invocations: [
@@ -144,7 +137,6 @@ invoker.testInvoke({
 It is expecting to receive a HEX as value on args.
 
 ```ts
-const contractScriptHash = '0x0000000000000000000000000000000000000000'
 const transactionId = '0x0f3b6366b53cd83290769fb5c2cd4f05c4441dbb02af4dbb58a82a46a120ca17'
 invoker.testInvoke({
   invocations: [
@@ -162,7 +154,6 @@ invoker.testInvoke({
 It is expecting to receive a number as value on args. You can pass a string that represents a number.
 
 ```ts
-const contractScriptHash = '0x0000000000000000000000000000000000000000'
 const numberValue = 128
 invoker.testInvoke({
   invocations: [
@@ -174,7 +165,6 @@ invoker.testInvoke({
   ],
 })
 
-const contractScriptHash = '0x0000000000000000000000000000000000000000'
 const numberAsStringValue = '128'
 invoker.testInvoke({
   invocations: [
@@ -192,7 +182,6 @@ invoker.testInvoke({
 It is expecting to receive an array of other arguments as value on args.
 
 ```ts
-const contractScriptHash = '0x0000000000000000000000000000000000000000'
 invoker.testInvoke({
   invocations: [
     {
@@ -218,7 +207,6 @@ invoker.testInvoke({
 It is expecting to receive a HEX string as value on args. It automatically converts a hex to base64.
 
 ```ts
-const contractScriptHash = '0x0000000000000000000000000000000000000000'
 const hexValue = 'HEX string'
 invoker.testInvoke({
   invocations: [
