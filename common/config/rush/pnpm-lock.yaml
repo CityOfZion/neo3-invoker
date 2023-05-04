@@ -15,7 +15,7 @@ importers:
 
   ../../packages/neon-invoker:
     specifiers:
-      '@cityofzion/neo3-invoker': workspace:*
+      '@cityofzion/neo3-invoker': 1.4.0
       '@cityofzion/neon-core': ^5.3.0
       '@cityofzion/neon-js': ^5.3.0
       '@types/expect': ^24.3.0
@@ -24,7 +24,7 @@ importers:
       ts-mocha: ^10.0.0
       typescript: ^4.3.2
     dependencies:
-      '@cityofzion/neo3-invoker': link:../neo3-invoker
+      '@cityofzion/neo3-invoker': 1.4.0
       '@cityofzion/neon-core': 5.4.0
       '@cityofzion/neon-js': 5.4.0
     devDependencies:
@@ -56,6 +56,10 @@ packages:
       chalk: 2.4.2
       js-tokens: 4.0.0
     dev: true
+
+  /@cityofzion/neo3-invoker/1.4.0:
+    resolution: {integrity: sha512-BOqJA2e6Kq3QPL/kaMYEjpPCeh9fdKTzRjEi9oIxi0MY5B7nj4rhAVl4l2A06jGNboi+VhToo/gJ/ZVzW/GaeQ==}
+    dev: false
 
   /@cityofzion/neon-api/5.4.0_@cityofzion+neon-core@5.4.0:
     resolution: {integrity: sha512-FHjdq2RnZLK37Hpd71yhVMkmbhl/iyPrmmAiEKb4mf5/rLtbNaKEEEJsxRkSNasio9+14cd7+BecIZ/35L1Sbg==}

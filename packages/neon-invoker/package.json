@@ -12,7 +12,7 @@
     "test": "ts-mocha src/**/*.spec.ts"
   },
   "dependencies": {
-    "@cityofzion/neo3-invoker": "workspace:*",
+    "@cityofzion/neo3-invoker": "1.4.0",
     "@cityofzion/neon-core": "^5.3.0",
     "@cityofzion/neon-js": "^5.3.0"
   },
