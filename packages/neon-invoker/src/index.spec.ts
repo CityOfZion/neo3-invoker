@@ -1,13 +1,17 @@
 import { NeonInvoker } from './index'
 import { wallet, tx } from '@cityofzion/neon-core'
 import assert from 'assert'
+import chai from 'chai'
 
 describe('Neon Tests', function () {
   this.timeout(60000)
 
   it('can transfer', async () => {
-    const acc = new wallet.Account('fb1f57cc1347ae5b6251dc8bae761362d2ecaafec4c87f4dc9e97fef6dd75014')
-    const invoker = await NeonInvoker.init(NeonInvoker.TESTNET, acc)
+    const account = new wallet.Account('fb1f57cc1347ae5b6251dc8bae761362d2ecaafec4c87f4dc9e97fef6dd75014')
+    const invoker = await NeonInvoker.init({
+      rpcAddress: NeonInvoker.TESTNET,
+      account,
+    })
 
     const txId = await invoker.invokeFunction({
       invocations: [
@@ -15,7 +19,7 @@ describe('Neon Tests', function () {
           scriptHash: '0xd2a4cff31913016155e38e474a2c06d08be276cf',
           operation: 'transfer',
           args: [
-            { type: 'Hash160', value: acc.address },
+            { type: 'Hash160', value: account.address },
             { type: 'Hash160', value: 'NhGomBpYnKXArr55nHRQ5rzy79TwKVXZbr' },
             { type: 'Integer', value: 100000000 },
             { type: 'Array', value: [] },
@@ -24,7 +28,7 @@ describe('Neon Tests', function () {
       ],
       signers: [
         {
-          account: acc.scriptHash,
+          account: account.scriptHash,
           scopes: tx.WitnessScope.CalledByEntry,
           rules: [],
         },
@@ -36,8 +40,11 @@ describe('Neon Tests', function () {
   })
 
   it('can calculate fees', async () => {
-    const acc = new wallet.Account('fb1f57cc1347ae5b6251dc8bae761362d2ecaafec4c87f4dc9e97fef6dd75014')
-    const invoker = await NeonInvoker.init(NeonInvoker.TESTNET, acc)
+    const account = new wallet.Account('fb1f57cc1347ae5b6251dc8bae761362d2ecaafec4c87f4dc9e97fef6dd75014')
+    const invoker = await NeonInvoker.init({
+      rpcAddress: NeonInvoker.TESTNET,
+      account,
+    })
 
     const { networkFee, systemFee, total } = await invoker.calculateFee({
       invocations: [
@@ -45,7 +52,7 @@ describe('Neon Tests', function () {
           scriptHash: '0xd2a4cff31913016155e38e474a2c06d08be276cf',
           operation: 'transfer',
           args: [
-            { type: 'Hash160', value: acc.address },
+            { type: 'Hash160', value: account.address },
             { type: 'Hash160', value: 'NhGomBpYnKXArr55nHRQ5rzy79TwKVXZbr' },
             { type: 'Integer', value: 100000000 },
             { type: 'Array', value: [] },
@@ -54,7 +61,7 @@ describe('Neon Tests', function () {
       ],
       signers: [
         {
-          account: acc.scriptHash,
+          account: account.scriptHash,
           scopes: tx.WitnessScope.CalledByEntry,
           rules: [],
         },
@@ -67,7 +74,9 @@ describe('Neon Tests', function () {
   })
 
   it('check symbol', async () => {
-    const invoker = await NeonInvoker.init(NeonInvoker.TESTNET)
+    const invoker = await NeonInvoker.init({
+      rpcAddress: NeonInvoker.TESTNET,
+    })
 
     const resp = await invoker.testInvoke({
       invocations: [

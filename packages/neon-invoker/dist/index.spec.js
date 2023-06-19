@@ -18,15 +18,18 @@ const assert_1 = __importDefault(require("assert"));
 describe('Neon Tests', function () {
     this.timeout(60000);
     it('can transfer', () => __awaiter(this, void 0, void 0, function* () {
-        const acc = new neon_core_1.wallet.Account('fb1f57cc1347ae5b6251dc8bae761362d2ecaafec4c87f4dc9e97fef6dd75014');
-        const invoker = yield index_1.NeonInvoker.init(index_1.NeonInvoker.TESTNET, acc);
+        const account = new neon_core_1.wallet.Account('fb1f57cc1347ae5b6251dc8bae761362d2ecaafec4c87f4dc9e97fef6dd75014');
+        const invoker = yield index_1.NeonInvoker.init({
+            rpcAddress: index_1.NeonInvoker.TESTNET,
+            account,
+        });
         const txId = yield invoker.invokeFunction({
             invocations: [
                 {
                     scriptHash: '0xd2a4cff31913016155e38e474a2c06d08be276cf',
                     operation: 'transfer',
                     args: [
-                        { type: 'Hash160', value: acc.address },
+                        { type: 'Hash160', value: account.address },
                         { type: 'Hash160', value: 'NhGomBpYnKXArr55nHRQ5rzy79TwKVXZbr' },
                         { type: 'Integer', value: 100000000 },
                         { type: 'Array', value: [] },
@@ -35,7 +38,7 @@ describe('Neon Tests', function () {
             ],
             signers: [
                 {
-                    account: acc.scriptHash,
+                    account: account.scriptHash,
                     scopes: neon_core_1.tx.WitnessScope.CalledByEntry,
                     rules: [],
                 },
@@ -45,15 +48,18 @@ describe('Neon Tests', function () {
         return true;
     }));
     it('can calculate fees', () => __awaiter(this, void 0, void 0, function* () {
-        const acc = new neon_core_1.wallet.Account('fb1f57cc1347ae5b6251dc8bae761362d2ecaafec4c87f4dc9e97fef6dd75014');
-        const invoker = yield index_1.NeonInvoker.init(index_1.NeonInvoker.TESTNET, acc);
+        const account = new neon_core_1.wallet.Account('fb1f57cc1347ae5b6251dc8bae761362d2ecaafec4c87f4dc9e97fef6dd75014');
+        const invoker = yield index_1.NeonInvoker.init({
+            rpcAddress: index_1.NeonInvoker.TESTNET,
+            account,
+        });
         const { networkFee, systemFee, total } = yield invoker.calculateFee({
             invocations: [
                 {
                     scriptHash: '0xd2a4cff31913016155e38e474a2c06d08be276cf',
                     operation: 'transfer',
                     args: [
-                        { type: 'Hash160', value: acc.address },
+                        { type: 'Hash160', value: account.address },
                         { type: 'Hash160', value: 'NhGomBpYnKXArr55nHRQ5rzy79TwKVXZbr' },
                         { type: 'Integer', value: 100000000 },
                         { type: 'Array', value: [] },
@@ -62,7 +68,7 @@ describe('Neon Tests', function () {
             ],
             signers: [
                 {
-                    account: acc.scriptHash,
+                    account: account.scriptHash,
                     scopes: neon_core_1.tx.WitnessScope.CalledByEntry,
                     rules: [],
                 },
@@ -73,7 +79,9 @@ describe('Neon Tests', function () {
         (0, assert_1.default)(total === Number(networkFee.add(systemFee).toDecimal(8)), 'has totalFee');
     }));
     it('check symbol', () => __awaiter(this, void 0, void 0, function* () {
-        const invoker = yield index_1.NeonInvoker.init(index_1.NeonInvoker.TESTNET);
+        const invoker = yield index_1.NeonInvoker.init({
+            rpcAddress: index_1.NeonInvoker.TESTNET,
+        });
         const resp = yield invoker.testInvoke({
             invocations: [
                 {
