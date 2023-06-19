@@ -1,6 +1,6 @@
 import { ContractInvocationMulti, Signer, Neo3Invoker, Arg, InvokeResult, StackItemJson } from '@cityofzion/neo3-invoker';
+import { api } from '@cityofzion/neon-js';
 import * as Neon from '@cityofzion/neon-core';
-import { CommonConfig } from '@cityofzion/neon-js/lib/experimental/types';
 export type RpcConfig = {
     rpcAddress: string;
     networkMagic: number;
@@ -17,26 +17,30 @@ export type ExtendedArg = Arg | {
     type: 'ScriptHash';
     value: string;
 };
+export type InitOptions = {
+    rpcAddress: string;
+    account?: Neon.wallet.Account;
+    signingCallback?: api.SigningFunction;
+};
+export type Options = InitOptions & {
+    networkMagic: number;
+    validBlocks: number;
+};
 export declare class NeonInvoker implements Neo3Invoker {
-    rpcConfig: RpcConfig;
-    account: Neon.wallet.Account | undefined;
+    options: Options;
     static MAINNET: string;
     static TESTNET: string;
     private constructor();
-    static init(rpcAddress: string, account?: Neon.wallet.Account): Promise<NeonInvoker>;
-    static getMagicOfRpcAddress(rpcAddress: string): Promise<number>;
     testInvoke(cim: ContractInvocationMulti): Promise<InvokeResult>;
     invokeFunction(cim: ContractInvocationMulti): Promise<string>;
     calculateFee(cim: ContractInvocationMulti): Promise<CalculateFee>;
+    getNetworkFee(cim: ContractInvocationMulti): Promise<Neon.u.BigInteger>;
+    getSystemFee(cim: ContractInvocationMulti): Promise<Neon.u.BigInteger>;
     traverseIterator(sessionId: string, iteratorId: string, count: number): Promise<StackItemJson[]>;
-    buildTransaction(script: string, validUntilBlock: number, signers: Signer[]): Neon.tx.Transaction;
-    signTransaction(trx: Neon.tx.Transaction): Neon.tx.Transaction;
-    sendTransaction(trx: Neon.tx.Transaction): Promise<string>;
+    static init(options: InitOptions): Promise<NeonInvoker>;
+    static getMagicOfRpcAddress(rpcAddress: string): Promise<number>;
     static buildScriptBuilder(cim: ContractInvocationMulti): string;
-    overrideSystemFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti): Promise<Neon.u.BigInteger>;
-    overrideNetworkFeeOnTransaction(trx: Neon.tx.Transaction, config: CommonConfig, cim: ContractInvocationMulti): Promise<Neon.u.BigInteger>;
-    static addFeesToTransaction(trx: Neon.tx.Transaction, config: CommonConfig): Promise<void>;
     static convertParams(args: ExtendedArg[] | undefined): Neon.sc.ContractParam[];
-    static buildSigner(defaultAccount: Neon.wallet.Account, signerEntry?: Signer): Neon.tx.Signer;
-    static buildMultipleSigner(defaultAccount: Neon.wallet.Account, signers: Signer[] | undefined): Neon.tx.Signer[];
+    static buildSigner(defaultAccount?: Neon.wallet.Account, signerEntry?: Signer): Neon.tx.Signer;
+    static buildMultipleSigner(defaultAccount?: Neon.wallet.Account, signers?: Signer[]): Neon.tx.Signer[];
 }
