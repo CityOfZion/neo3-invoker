@@ -127,7 +127,12 @@ export class NeonInvoker implements Neo3Invoker {
     })
 
     if (this.options.account) {
-      trx.sign(this.options.account, this.options.networkMagic)
+      trx.addWitness(
+        new tx.Witness({
+          invocationScript: '',
+          verificationScript: wallet.getVerificationScriptFromPublicKey(this.options.account.publicKey),
+        })
+      )
     }
 
     const networkFee = await api.smartCalculateNetworkFee(trx, rpcClient)

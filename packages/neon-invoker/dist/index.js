@@ -116,7 +116,10 @@ class NeonInvoker {
                 signers: NeonInvoker.buildMultipleSigner(this.options.account, cim.signers),
             });
             if (this.options.account) {
-                trx.sign(this.options.account, this.options.networkMagic);
+                trx.addWitness(new neon_js_1.tx.Witness({
+                    invocationScript: '',
+                    verificationScript: neon_js_1.wallet.getVerificationScriptFromPublicKey(this.options.account.publicKey),
+                }));
             }
             const networkFee = yield neon_js_1.api.smartCalculateNetworkFee(trx, rpcClient);
             return networkFee;
