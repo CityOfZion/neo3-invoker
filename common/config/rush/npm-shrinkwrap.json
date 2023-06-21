@@ -144,7 +144,7 @@
     },
     "@rush-temp/neon-invoker": {
       "version": "file:projects/neon-invoker.tgz",
-      "integrity": "sha512-z3+Ds166xLr7tu9XSSmOZkRYIniRAKMQhGx2acaJoRnScZilX1t9UTa5j3w272sfWRhNju5bEVTGKCOOTmmAHw==",
+      "integrity": "sha512-9lesRH26CH4DehTawjVJQODVKJyN2PT4jPX3rn3yMK7+18CLe0Xci15FDS29xMg6o1+PKDXNlC8LZS76yQhtBg==",
       "requires": {
         "@cityofzion/neon-core": "5.3.0",
         "@cityofzion/neon-js": "5.3.0",
