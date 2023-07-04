@@ -19,7 +19,7 @@ export type ExtendedArg = Arg | {
 };
 export type InitOptions = {
     rpcAddress: string;
-    account?: Neon.wallet.Account;
+    account?: Neon.wallet.Account | Neon.wallet.Account[];
     signingCallback?: api.SigningFunction;
 };
 export type Options = InitOptions & {
@@ -41,6 +41,7 @@ export declare class NeonInvoker implements Neo3Invoker {
     static getMagicOfRpcAddress(rpcAddress: string): Promise<number>;
     static buildScriptBuilder(cim: ContractInvocationMulti): string;
     static convertParams(args: ExtendedArg[] | undefined): Neon.sc.ContractParam[];
-    static buildSigner(defaultAccount?: Neon.wallet.Account, signerEntry?: Signer): Neon.tx.Signer;
-    static buildMultipleSigner(defaultAccount?: Neon.wallet.Account, signers?: Signer[]): Neon.tx.Signer[];
+    static buildSigner(optionsAccount: Neon.wallet.Account | undefined, signerEntry?: Signer): Neon.tx.Signer;
+    static buildMultipleSigner(optionAccounts: (Neon.wallet.Account | undefined)[], signers?: Signer[]): Neon.tx.Signer[];
+    private normalizeAccountArray;
 }

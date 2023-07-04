@@ -41,22 +41,22 @@ class NeonInvoker {
     }
     testInvoke(cim) {
         return __awaiter(this, void 0, void 0, function* () {
+            const accountArr = this.normalizeAccountArray(this.options.account);
             const script = NeonInvoker.buildScriptBuilder(cim);
-            return yield new neon_js_1.rpc.RPCClient(this.options.rpcAddress).invokeScript(neon_js_1.u.HexString.fromHex(script), this.options.account ? NeonInvoker.buildMultipleSigner(this.options.account, cim.signers) : undefined);
+            return yield new neon_js_1.rpc.RPCClient(this.options.rpcAddress).invokeScript(neon_js_1.u.HexString.fromHex(script), accountArr[0] ? NeonInvoker.buildMultipleSigner(accountArr, cim.signers) : undefined);
         });
     }
     invokeFunction(cim) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.options.account)
-                throw new Error('You need to provide an account to sign the transaction');
+            const accountArr = this.normalizeAccountArray(this.options.account);
             const script = NeonInvoker.buildScriptBuilder(cim);
             const rpcClient = new neon_js_1.rpc.RPCClient(this.options.rpcAddress);
             const currentHeight = yield rpcClient.getBlockCount();
             let trx = new neon_js_1.tx.Transaction({
                 script: neon_js_1.u.HexString.fromHex(script),
                 validUntilBlock: currentHeight + this.options.validBlocks,
-                signers: NeonInvoker.buildMultipleSigner(this.options.account, cim.signers),
+                signers: NeonInvoker.buildMultipleSigner(accountArr, cim.signers),
             });
             let systemFeeOverride;
             let networkFeeOverride;
@@ -76,20 +76,24 @@ class NeonInvoker {
             }
             trx.networkFee = networkFeeOverride;
             trx.systemFee = systemFeeOverride;
-            if (this.options.signingCallback) {
-                trx.addWitness(new neon_js_1.tx.Witness({
-                    invocationScript: '',
-                    verificationScript: neon_js_1.wallet.getVerificationScriptFromPublicKey(this.options.account.publicKey),
-                }));
-                const facade = yield neon_js_1.api.NetworkFacade.fromConfig({
-                    node: this.options.rpcAddress,
-                });
-                trx = yield facade.sign(trx, {
-                    signingCallback: this.options.signingCallback,
-                });
-            }
-            else {
-                trx.sign(this.options.account, this.options.networkMagic);
+            for (const account of accountArr) {
+                if (account) {
+                    if (this.options.signingCallback) {
+                        trx.addWitness(new neon_js_1.tx.Witness({
+                            invocationScript: '',
+                            verificationScript: neon_js_1.wallet.getVerificationScriptFromPublicKey(account.publicKey),
+                        }));
+                        const facade = yield neon_js_1.api.NetworkFacade.fromConfig({
+                            node: this.options.rpcAddress,
+                        });
+                        trx = yield facade.sign(trx, {
+                            signingCallback: this.options.signingCallback,
+                        });
+                    }
+                    else {
+                        trx.sign(account, this.options.networkMagic);
+                    }
+                }
             }
             return yield rpcClient.sendRawTransaction(trx);
         });
@@ -107,19 +111,22 @@ class NeonInvoker {
     }
     getNetworkFee(cim) {
         return __awaiter(this, void 0, void 0, function* () {
+            const accountArr = this.normalizeAccountArray(this.options.account);
             const script = NeonInvoker.buildScriptBuilder(cim);
             const rpcClient = new neon_js_1.rpc.RPCClient(this.options.rpcAddress);
             const currentHeight = yield rpcClient.getBlockCount();
             const trx = new neon_js_1.tx.Transaction({
                 script: neon_js_1.u.HexString.fromHex(script),
                 validUntilBlock: currentHeight + this.options.validBlocks,
-                signers: NeonInvoker.buildMultipleSigner(this.options.account, cim.signers),
+                signers: NeonInvoker.buildMultipleSigner(accountArr, cim.signers),
             });
-            if (this.options.account) {
-                trx.addWitness(new neon_js_1.tx.Witness({
-                    invocationScript: '',
-                    verificationScript: neon_js_1.wallet.getVerificationScriptFromPublicKey(this.options.account.publicKey),
-                }));
+            for (const account of accountArr) {
+                if (account) {
+                    trx.addWitness(new neon_js_1.tx.Witness({
+                        invocationScript: '',
+                        verificationScript: neon_js_1.wallet.getVerificationScriptFromPublicKey(account.publicKey),
+                    }));
+                }
             }
             const networkFee = yield neon_js_1.api.smartCalculateNetworkFee(trx, rpcClient);
             return networkFee;
@@ -196,15 +203,15 @@ class NeonInvoker {
             }
         });
     }
-    static buildSigner(defaultAccount, signerEntry) {
+    static buildSigner(optionsAccount, signerEntry) {
         var _a, _b;
         let scopes = (_a = signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.scopes) !== null && _a !== void 0 ? _a : 'CalledByEntry';
         if (typeof scopes === 'number') {
             scopes = Neon.tx.toString(scopes);
         }
-        const account = (_b = signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.account) !== null && _b !== void 0 ? _b : defaultAccount === null || defaultAccount === void 0 ? void 0 : defaultAccount.scriptHash;
+        const account = (_b = signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.account) !== null && _b !== void 0 ? _b : optionsAccount === null || optionsAccount === void 0 ? void 0 : optionsAccount.scriptHash;
         if (!account)
-            throw new Error('You need to provide an default account or an account for each signer');
+            throw new Error('You need to provide at least one account to sign.');
         return neon_js_1.tx.Signer.fromJson({
             scopes,
             account,
@@ -213,8 +220,24 @@ class NeonInvoker {
             rules: signerEntry === null || signerEntry === void 0 ? void 0 : signerEntry.rules,
         });
     }
-    static buildMultipleSigner(defaultAccount, signers) {
-        return !(signers === null || signers === void 0 ? void 0 : signers.length) ? [this.buildSigner(defaultAccount)] : signers.map(s => this.buildSigner(defaultAccount, s));
+    static buildMultipleSigner(optionAccounts, signers) {
+        if (!(signers === null || signers === void 0 ? void 0 : signers.length)) {
+            return optionAccounts.map((a) => this.buildSigner(a));
+        }
+        else if (signers.length === optionAccounts.length) {
+            return optionAccounts.map((a, i) => this.buildSigner(a, signers[i]));
+        }
+        else {
+            throw new Error('You need to provide an account on the constructor for each signer. At least one.');
+        }
+    }
+    normalizeAccountArray(acc) {
+        if (Array.isArray(acc)) {
+            return acc;
+        }
+        else {
+            return [acc];
+        }
     }
 }
 exports.NeonInvoker = NeonInvoker;
