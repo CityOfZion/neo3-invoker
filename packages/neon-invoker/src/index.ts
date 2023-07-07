@@ -61,25 +61,10 @@ export class NeonInvoker implements Neo3Invoker {
       signers: NeonInvoker.buildMultipleSigner(this.options.account, cim.signers),
     })
 
-    let systemFeeOverride: Neon.u.BigInteger | undefined
-    let networkFeeOverride: Neon.u.BigInteger | undefined
-
-    if (cim.systemFeeOverride) {
-      systemFeeOverride = u.BigInteger.fromNumber(cim.systemFeeOverride)
-    } else {
-      const systemFee = await this.getSystemFee(cim)
-      systemFeeOverride = systemFee.add(cim.extraSystemFee ?? 0)
-    }
-
-    if (cim.networkFeeOverride) {
-      networkFeeOverride = u.BigInteger.fromNumber(cim.networkFeeOverride)
-    } else {
-      const networkFee = await this.getNetworkFee(cim)
-      networkFeeOverride = networkFee.add(cim.extraNetworkFee ?? 0)
-    }
-
-    trx.networkFee = networkFeeOverride
-    trx.systemFee = systemFeeOverride
+    const systemFee = await this.getSystemFee(cim)
+    const networkFee = await this.getNetworkFee(cim)
+    trx.networkFee = networkFee
+    trx.systemFee = systemFee
 
     if (this.options.signingCallback) {
       trx.addWitness(
@@ -115,6 +100,10 @@ export class NeonInvoker implements Neo3Invoker {
   }
 
   async getNetworkFee(cim: ContractInvocationMulti): Promise<Neon.u.BigInteger> {
+    if (cim.networkFeeOverride) {
+      return u.BigInteger.fromNumber(cim.networkFeeOverride)
+    }
+
     const script = NeonInvoker.buildScriptBuilder(cim)
 
     const rpcClient = new rpc.RPCClient(this.options.rpcAddress)
@@ -132,13 +121,18 @@ export class NeonInvoker implements Neo3Invoker {
 
     const networkFee = await api.smartCalculateNetworkFee(trx, rpcClient)
 
-    return networkFee
+    return networkFee.add(cim.extraNetworkFee ?? 0)
   }
 
   async getSystemFee(cim: ContractInvocationMulti): Promise<Neon.u.BigInteger> {
+    if (cim.systemFeeOverride) {
+      return u.BigInteger.fromNumber(cim.systemFeeOverride)
+    }
+
     const { gasconsumed } = await this.testInvoke(cim)
     const systemFee = u.BigInteger.fromNumber(gasconsumed)
-    return systemFee
+
+    return systemFee.add(cim.extraSystemFee ?? 0)
   }
 
   async traverseIterator(sessionId: string, iteratorId: string, count: number): Promise<StackItemJson[]> {
