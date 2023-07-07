@@ -53,7 +53,7 @@ describe('Neon Tests', function () {
             rpcAddress: index_1.NeonInvoker.TESTNET,
             account,
         });
-        const { networkFee, systemFee, total } = yield invoker.calculateFee({
+        const param = {
             invocations: [
                 {
                     scriptHash: '0xd2a4cff31913016155e38e474a2c06d08be276cf',
@@ -73,10 +73,17 @@ describe('Neon Tests', function () {
                     rules: [],
                 },
             ],
-        });
+        };
+        const { networkFee, systemFee, total } = yield invoker.calculateFee(param);
         (0, assert_1.default)(Number(networkFee) > 0, 'has networkFee');
         (0, assert_1.default)(Number(systemFee) > 0, 'has systemFee');
         (0, assert_1.default)(total === Number(networkFee.add(systemFee).toDecimal(8)), 'has totalFee');
+        const { networkFee: networkFeeOverridden, systemFee: systemFeeOverridden } = yield invoker.calculateFee(Object.assign({ networkFeeOverride: 20000, systemFeeOverride: 10000 }, param));
+        (0, assert_1.default)(Number(networkFeeOverridden) === 20000, 'has networkFee overridden');
+        (0, assert_1.default)(Number(systemFeeOverridden) === 10000, 'has systemFee overridden');
+        const { networkFee: networkFeeExtra, systemFee: systemFeeExtra } = yield invoker.calculateFee(Object.assign({ extraNetworkFee: 20000, extraSystemFee: 10000 }, param));
+        (0, assert_1.default)(Number(networkFeeExtra) === Number(networkFee) + 20000, 'has networkFee overridden');
+        (0, assert_1.default)(Number(systemFeeExtra) === Number(systemFee) + 10000, 'has systemFee overridden');
     }));
     it('check symbol', () => __awaiter(this, void 0, void 0, function* () {
         const invoker = yield index_1.NeonInvoker.init({

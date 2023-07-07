@@ -1,3 +1,4 @@
+import { ContractInvocationMulti } from '@cityofzion/neo3-invoker'
 import { NeonInvoker } from './index'
 import { wallet, tx } from '@cityofzion/neon-core'
 import assert from 'assert'
@@ -46,7 +47,7 @@ describe('Neon Tests', function () {
       account,
     })
 
-    const { networkFee, systemFee, total } = await invoker.calculateFee({
+    const param: ContractInvocationMulti = {
       invocations: [
         {
           scriptHash: '0xd2a4cff31913016155e38e474a2c06d08be276cf',
@@ -66,11 +67,31 @@ describe('Neon Tests', function () {
           rules: [],
         },
       ],
-    })
+    }
+
+    const { networkFee, systemFee, total } = await invoker.calculateFee(param)
 
     assert(Number(networkFee) > 0, 'has networkFee')
     assert(Number(systemFee) > 0, 'has systemFee')
     assert(total === Number(networkFee.add(systemFee).toDecimal(8)), 'has totalFee')
+
+    const { networkFee: networkFeeOverridden, systemFee: systemFeeOverridden } = await invoker.calculateFee({
+      networkFeeOverride: 20000,
+      systemFeeOverride: 10000,
+      ...param,
+    })
+
+    assert(Number(networkFeeOverridden) === 20000, 'has networkFee overridden')
+    assert(Number(systemFeeOverridden) === 10000, 'has systemFee overridden')
+
+    const { networkFee: networkFeeExtra, systemFee: systemFeeExtra } = await invoker.calculateFee({
+      extraNetworkFee: 20000,
+      extraSystemFee: 10000,
+      ...param,
+    })
+
+    assert(Number(networkFeeExtra) === Number(networkFee) + 20000, 'has networkFee overridden')
+    assert(Number(systemFeeExtra) === Number(systemFee) + 10000, 'has systemFee overridden')
   })
 
   it('check symbol', async () => {
