@@ -1,6 +1,6 @@
 {
   "name": "@cityofzion/neon-invoker",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,7 +12,7 @@
     "test": "ts-mocha src/**/*.spec.ts"
   },
   "dependencies": {
-    "@cityofzion/neo3-invoker": "1.5.2",
+    "@cityofzion/neo3-invoker": "1.6.0",
     "@cityofzion/neon-core": "5.3.0",
     "@cityofzion/neon-js": "5.3.0",
     "chai": "~4.3.7"

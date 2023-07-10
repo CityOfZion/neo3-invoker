@@ -47,7 +47,6 @@ class NeonInvoker {
         });
     }
     invokeFunction(cim) {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const accountArr = this.normalizeAccountArray(this.options.account);
             const script = NeonInvoker.buildScriptBuilder(cim);
@@ -58,24 +57,10 @@ class NeonInvoker {
                 validUntilBlock: currentHeight + this.options.validBlocks,
                 signers: NeonInvoker.buildMultipleSigner(accountArr, cim.signers),
             });
-            let systemFeeOverride;
-            let networkFeeOverride;
-            if (cim.systemFeeOverride) {
-                systemFeeOverride = neon_js_1.u.BigInteger.fromNumber(cim.systemFeeOverride);
-            }
-            else {
-                const systemFee = yield this.getSystemFee(cim);
-                systemFeeOverride = systemFee.add((_a = cim.extraSystemFee) !== null && _a !== void 0 ? _a : 0);
-            }
-            if (cim.networkFeeOverride) {
-                networkFeeOverride = neon_js_1.u.BigInteger.fromNumber(cim.networkFeeOverride);
-            }
-            else {
-                const networkFee = yield this.getNetworkFee(cim);
-                networkFeeOverride = networkFee.add((_b = cim.extraNetworkFee) !== null && _b !== void 0 ? _b : 0);
-            }
-            trx.networkFee = networkFeeOverride;
-            trx.systemFee = systemFeeOverride;
+            const systemFee = yield this.getSystemFee(cim);
+            const networkFee = yield this.getNetworkFee(cim);
+            trx.networkFee = networkFee;
+            trx.systemFee = systemFee;
             for (const account of accountArr) {
                 if (account) {
                     if (this.options.signingCallback) {
@@ -110,7 +95,11 @@ class NeonInvoker {
         });
     }
     getNetworkFee(cim) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
+            if (cim.networkFeeOverride) {
+                return neon_js_1.u.BigInteger.fromNumber(cim.networkFeeOverride);
+            }
             const accountArr = this.normalizeAccountArray(this.options.account);
             const script = NeonInvoker.buildScriptBuilder(cim);
             const rpcClient = new neon_js_1.rpc.RPCClient(this.options.rpcAddress);
@@ -129,14 +118,18 @@ class NeonInvoker {
                 }
             }
             const networkFee = yield neon_js_1.api.smartCalculateNetworkFee(trx, rpcClient);
-            return networkFee;
+            return networkFee.add((_a = cim.extraNetworkFee) !== null && _a !== void 0 ? _a : 0);
         });
     }
     getSystemFee(cim) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
+            if (cim.systemFeeOverride) {
+                return neon_js_1.u.BigInteger.fromNumber(cim.systemFeeOverride);
+            }
             const { gasconsumed } = yield this.testInvoke(cim);
             const systemFee = neon_js_1.u.BigInteger.fromNumber(gasconsumed);
-            return systemFee;
+            return systemFee.add((_a = cim.extraSystemFee) !== null && _a !== void 0 ? _a : 0);
         });
     }
     traverseIterator(sessionId, iteratorId, count) {

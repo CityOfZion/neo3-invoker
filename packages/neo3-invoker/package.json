@@ -1,6 +1,6 @@
 {
   "name": "@cityofzion/neo3-invoker",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
