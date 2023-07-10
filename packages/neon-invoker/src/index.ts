@@ -24,7 +24,7 @@ export type ExtendedArg = Arg | { type: 'Address'; value: string } | { type: 'Sc
 
 export type InitOptions = {
   rpcAddress: string
-  account?: Neon.wallet.Account
+  account?: Neon.wallet.Account | Neon.wallet.Account[]
   signingCallback?: api.SigningFunction
 }
 
@@ -39,16 +39,17 @@ export class NeonInvoker implements Neo3Invoker {
   private constructor(public options: Options) {}
 
   async testInvoke(cim: ContractInvocationMulti): Promise<InvokeResult> {
+    const accountArr = this.normalizeAccountArray(this.options.account)
     const script = NeonInvoker.buildScriptBuilder(cim)
 
     return await new rpc.RPCClient(this.options.rpcAddress).invokeScript(
-      u.HexString.fromHex(script),
-      this.options.account ? NeonInvoker.buildMultipleSigner(this.options.account, cim.signers) : undefined
+        u.HexString.fromHex(script),
+        accountArr[0] ? NeonInvoker.buildMultipleSigner(accountArr, cim.signers) : undefined,
     )
   }
 
   async invokeFunction(cim: ContractInvocationMulti): Promise<string> {
-    if (!this.options.account) throw new Error('You need to provide an account to sign the transaction')
+    const accountArr = this.normalizeAccountArray(this.options.account)
 
     const script = NeonInvoker.buildScriptBuilder(cim)
 
@@ -58,7 +59,7 @@ export class NeonInvoker implements Neo3Invoker {
     let trx = new tx.Transaction({
       script: u.HexString.fromHex(script),
       validUntilBlock: currentHeight + this.options.validBlocks,
-      signers: NeonInvoker.buildMultipleSigner(this.options.account, cim.signers),
+      signers: NeonInvoker.buildMultipleSigner(accountArr, cim.signers),
     })
 
     const systemFee = await this.getSystemFee(cim)
@@ -66,23 +67,27 @@ export class NeonInvoker implements Neo3Invoker {
     trx.networkFee = networkFee
     trx.systemFee = systemFee
 
-    if (this.options.signingCallback) {
-      trx.addWitness(
-        new tx.Witness({
-          invocationScript: '',
-          verificationScript: wallet.getVerificationScriptFromPublicKey(this.options.account.publicKey),
-        })
-      )
+    for (const account of accountArr) {
+      if (account) {
+        if (this.options.signingCallback) {
+          trx.addWitness(
+              new tx.Witness({
+                invocationScript: '',
+                verificationScript: wallet.getVerificationScriptFromPublicKey(account.publicKey),
+              })
+          )
 
-      const facade = await api.NetworkFacade.fromConfig({
-        node: this.options.rpcAddress,
-      })
+          const facade = await api.NetworkFacade.fromConfig({
+            node: this.options.rpcAddress,
+          })
 
-      trx = await facade.sign(trx, {
-        signingCallback: this.options.signingCallback,
-      })
-    } else {
-      trx.sign(this.options.account, this.options.networkMagic)
+          trx = await facade.sign(trx, {
+            signingCallback: this.options.signingCallback,
+          })
+        } else {
+          trx.sign(account, this.options.networkMagic)
+        }
+      }
     }
 
     return await rpcClient.sendRawTransaction(trx)
@@ -104,6 +109,7 @@ export class NeonInvoker implements Neo3Invoker {
       return u.BigInteger.fromNumber(cim.networkFeeOverride)
     }
 
+    const accountArr = this.normalizeAccountArray(this.options.account)
     const script = NeonInvoker.buildScriptBuilder(cim)
 
     const rpcClient = new rpc.RPCClient(this.options.rpcAddress)
@@ -112,16 +118,18 @@ export class NeonInvoker implements Neo3Invoker {
     const trx = new tx.Transaction({
       script: u.HexString.fromHex(script),
       validUntilBlock: currentHeight + this.options.validBlocks,
-      signers: NeonInvoker.buildMultipleSigner(this.options.account, cim.signers),
+      signers: NeonInvoker.buildMultipleSigner(accountArr, cim.signers),
     })
 
-    if (this.options.account) {
-      trx.addWitness(
-        new tx.Witness({
-          invocationScript: '',
-          verificationScript: wallet.getVerificationScriptFromPublicKey(this.options.account.publicKey),
-        })
-      )
+    for (const account of accountArr) {
+      if (account) {
+        trx.addWitness(
+            new tx.Witness({
+              invocationScript: '',
+              verificationScript: wallet.getVerificationScriptFromPublicKey(account.publicKey),
+            })
+        )
+      }
     }
 
     const networkFee = await api.smartCalculateNetworkFee(trx, rpcClient)
@@ -206,14 +214,14 @@ export class NeonInvoker implements Neo3Invoker {
     })
   }
 
-  static buildSigner(defaultAccount?: Neon.wallet.Account, signerEntry?: Signer): Neon.tx.Signer {
+  static buildSigner(optionsAccount: Neon.wallet.Account | undefined, signerEntry?: Signer): Neon.tx.Signer {
     let scopes = signerEntry?.scopes ?? 'CalledByEntry'
     if (typeof scopes === 'number') {
       scopes = Neon.tx.toString(scopes)
     }
 
-    const account = signerEntry?.account ?? defaultAccount?.scriptHash
-    if (!account) throw new Error('You need to provide an default account or an account for each signer')
+    const account = signerEntry?.account ?? optionsAccount?.scriptHash
+    if (!account) throw new Error('You need to provide at least one account to sign.')
 
     return tx.Signer.fromJson({
       scopes,
@@ -224,7 +232,21 @@ export class NeonInvoker implements Neo3Invoker {
     })
   }
 
-  static buildMultipleSigner(defaultAccount?: Neon.wallet.Account, signers?: Signer[]): Neon.tx.Signer[] {
-    return !signers?.length ? [this.buildSigner(defaultAccount)] : signers.map(s => this.buildSigner(defaultAccount, s))
+  static buildMultipleSigner(optionAccounts: (Neon.wallet.Account | undefined)[], signers?: Signer[]): Neon.tx.Signer[] {
+    if (!signers?.length) {
+      return optionAccounts.map((a) => this.buildSigner(a))
+    } else if (signers.length === optionAccounts.length) {
+      return optionAccounts.map((a, i) => this.buildSigner(a, signers[i]))
+    } else {
+      throw new Error('You need to provide an account on the constructor for each signer. At least one.')
+    }
+  }
+
+  private normalizeAccountArray(acc: Neon.wallet.Account | Neon.wallet.Account[] | undefined): (Neon.wallet.Account | undefined)[] {
+    if (Array.isArray(acc)) {
+      return acc
+    } else {
+      return [acc]
+    }
   }
 }
