@@ -1,0 +1,12 @@
+import { AnyArgType, BooleanArgType, IntegerArgType, ArrayResponseArgType, MapResponseArgType, ByteStringArgType, InteropInterfaceArgType, PointerArgType, BufferArgType, StructArgType, RpcResponseStackItem } from "@cityofzion/neo3-invoker";
+export declare function isStackTypeAny(item: any): item is AnyArgType;
+export declare function isStackTypeBoolean(item: any): item is BooleanArgType;
+export declare function isStackTypeInteger(item: any): item is IntegerArgType;
+export declare function isStackTypeArray(item: any): item is ArrayResponseArgType;
+export declare function isStackTypeMap(item: any): item is MapResponseArgType;
+export declare function isStackTypeByteString(item: any): item is ByteStringArgType;
+export declare function isStackTypeInteropInterface(item: any): item is InteropInterfaceArgType;
+export declare function isStackTypePointer(item: any): item is PointerArgType;
+export declare function isStackTypeBuffer(item: any): item is BufferArgType;
+export declare function isStackTypeStruct(item: any): item is StructArgType;
+export declare function isRpcResponseStackItem(item: any): item is RpcResponseStackItem;

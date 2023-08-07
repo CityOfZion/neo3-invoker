@@ -1,6 +1,7 @@
-import { ContractInvocationMulti, Signer, Neo3Invoker, Arg, InvokeResult, StackItemJson } from '@cityofzion/neo3-invoker';
+import { ContractInvocationMulti, Signer, Neo3Invoker, Arg, InvokeResult, RpcResponseStackItem } from '@cityofzion/neo3-invoker';
 import { api } from '@cityofzion/neon-js';
 import * as Neon from '@cityofzion/neon-core';
+import * as typeChecker from './typeChecker';
 export type RpcConfig = {
     rpcAddress: string;
     networkMagic: number;
@@ -36,7 +37,7 @@ export declare class NeonInvoker implements Neo3Invoker {
     calculateFee(cim: ContractInvocationMulti): Promise<CalculateFee>;
     getNetworkFee(cim: ContractInvocationMulti): Promise<Neon.u.BigInteger>;
     getSystemFee(cim: ContractInvocationMulti): Promise<Neon.u.BigInteger>;
-    traverseIterator(sessionId: string, iteratorId: string, count: number): Promise<StackItemJson[]>;
+    traverseIterator(sessionId: string, iteratorId: string, count: number): Promise<RpcResponseStackItem[]>;
     static init(options: InitOptions): Promise<NeonInvoker>;
     static getMagicOfRpcAddress(rpcAddress: string): Promise<number>;
     static buildScriptBuilder(cim: ContractInvocationMulti): string;
@@ -45,3 +46,4 @@ export declare class NeonInvoker implements Neo3Invoker {
     static buildMultipleSigner(optionAccounts: (Neon.wallet.Account | undefined)[], signers?: Signer[]): Neon.tx.Signer[];
     private normalizeAccountArray;
 }
+export { typeChecker };

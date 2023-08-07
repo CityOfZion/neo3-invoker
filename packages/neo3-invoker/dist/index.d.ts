@@ -96,17 +96,24 @@ export type Hash256ArgType = {
 };
 export type IntegerArgType = {
     type: 'Integer';
-    value: number | string;
+    value: string;
 };
 export type ArrayArgType = {
     type: 'Array';
     value: Arg[];
 };
+export type MapArgType = {
+    type: 'Map';
+    value: {
+        key: Arg;
+        value: Arg;
+    }[];
+};
 export type ByteArrayArgType = {
     type: 'ByteArray';
     value: string;
 };
-export type Arg = AnyArgType | StringArgType | BooleanArgType | PublicKeyArgType | Hash160ArgType | Hash256ArgType | IntegerArgType | ArrayArgType | ByteArrayArgType;
+export type Arg = AnyArgType | StringArgType | BooleanArgType | PublicKeyArgType | Hash160ArgType | Hash256ArgType | IntegerArgType | ArrayArgType | MapArgType | ByteArrayArgType;
 /**
  * A simple interface that defines the invocation options
  */
@@ -157,35 +164,43 @@ export type ContractInvocationMulti = {
      */
     networkFeeOverride?: number;
 };
-export declare enum StackItemType {
-    Any = 0,
-    Pointer = 16,
-    Boolean = 32,
-    Integer = 33,
-    ByteString = 40,
-    Buffer = 48,
-    Array = 64,
-    Struct = 65,
-    Map = 72,
-    InteropInterface = 96
-}
-export interface StackItemInteropInterfaceJson extends StackItemJson {
-    type: Extract<keyof typeof StackItemType, 'InteropInterface'>;
-    interface: 'IIterator';
+export type ArrayResponseArgType = {
+    type: 'Array';
+    value: RpcResponseStackItem[];
+};
+export type MapResponseArgType = {
+    type: 'Map';
+    value: {
+        key: RpcResponseStackItem;
+        value: RpcResponseStackItem;
+    }[];
+};
+export type ByteStringArgType = {
+    type: 'ByteString';
+    value: string;
+};
+export type InteropInterfaceArgType = {
+    type: 'InteropInterface';
+    interface: string;
     id: string;
-    value: undefined;
-}
-export interface StackItemJson {
-    type: keyof typeof StackItemType;
-    value?: string | boolean | number | StackItemJson[];
-    /** These properties comes when the invoke result is a iterator. You need to call the traverseIterator method to get the real result */
-    interface?: string;
-    id?: string;
-}
+};
+export type PointerArgType = {
+    type: 'Pointer';
+    value: string;
+};
+export type BufferArgType = {
+    type: 'Buffer';
+    value: string;
+};
+export type StructArgType = {
+    type: 'Struct';
+    value: RpcResponseStackItem[];
+};
+export type RpcResponseStackItem = AnyArgType | BooleanArgType | IntegerArgType | ArrayResponseArgType | MapResponseArgType | ByteStringArgType | InteropInterfaceArgType | PointerArgType | BufferArgType | StructArgType;
 /**
  * Result from calling invokescript or invokefunction.
  */
-export interface InvokeResult<T extends StackItemJson = StackItemJson> {
+export interface InvokeResult<T extends RpcResponseStackItem = RpcResponseStackItem> {
     /** The script that is sent for execution on the blockchain as a base64 string. */
     script: string;
     /** State of VM on exit. HALT means a successful exit while FAULT means exit with error. */
@@ -300,5 +315,5 @@ export interface Neo3Invoker {
      * @param count the number of items to retrieve
      * @return the call result promise
      */
-    traverseIterator: (sessionId: string, iteratorId: string, count: number) => Promise<StackItemJson[]>;
+    traverseIterator: (sessionId: string, iteratorId: string, count: number) => Promise<RpcResponseStackItem[]>;
 }

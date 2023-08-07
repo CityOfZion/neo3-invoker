@@ -32,9 +32,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NeonInvoker = void 0;
+exports.typeChecker = exports.NeonInvoker = void 0;
 const neon_js_1 = require("@cityofzion/neon-js");
 const Neon = __importStar(require("@cityofzion/neon-core"));
+const typeChecker = __importStar(require("./typeChecker"));
+exports.typeChecker = typeChecker;
 class NeonInvoker {
     constructor(options) {
         this.options = options;
@@ -43,7 +45,8 @@ class NeonInvoker {
         return __awaiter(this, void 0, void 0, function* () {
             const accountArr = this.normalizeAccountArray(this.options.account);
             const script = NeonInvoker.buildScriptBuilder(cim);
-            return yield new neon_js_1.rpc.RPCClient(this.options.rpcAddress).invokeScript(neon_js_1.u.HexString.fromHex(script), accountArr[0] ? NeonInvoker.buildMultipleSigner(accountArr, cim.signers) : undefined);
+            const rpcResult = yield new neon_js_1.rpc.RPCClient(this.options.rpcAddress).invokeScript(neon_js_1.u.HexString.fromHex(script), accountArr[0] ? NeonInvoker.buildMultipleSigner(accountArr, cim.signers) : undefined);
+            return Object.assign(Object.assign({}, rpcResult), { stack: rpcResult.stack });
         });
     }
     invokeFunction(cim) {
@@ -191,6 +194,8 @@ class NeonInvoker {
                     return neon_js_1.sc.ContractParam.integer(a.value);
                 case 'Array':
                     return neon_js_1.sc.ContractParam.array(...this.convertParams(a.value));
+                case 'Map':
+                    return neon_js_1.sc.ContractParam.map(...a.value.map(map => ({ key: this.convertParams([map.key])[0], value: this.convertParams([map.value])[0] })));
                 case 'ByteArray':
                     return neon_js_1.sc.ContractParam.byteArray(neon_js_1.u.hex2base64(a.value));
             }
