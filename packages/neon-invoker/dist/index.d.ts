@@ -1,10 +1,6 @@
-import { ContractInvocationMulti, Signer, Neo3Invoker, Arg, InvokeResult, StackItemJson } from '@cityofzion/neo3-invoker';
+import { ContractInvocationMulti, Signer, Neo3Invoker, Arg, InvokeResult, StackItemJson, BuiltTransaction } from '@cityofzion/neo3-invoker';
 import { api } from '@cityofzion/neon-js';
 import * as Neon from '@cityofzion/neon-core';
-export type RpcConfig = {
-    rpcAddress: string;
-    networkMagic: number;
-};
 export type CalculateFee = {
     networkFee: Neon.u.BigInteger;
     systemFee: Neon.u.BigInteger;
@@ -32,14 +28,22 @@ export declare class NeonInvoker implements Neo3Invoker {
     static TESTNET: string;
     private constructor();
     testInvoke(cim: ContractInvocationMulti): Promise<InvokeResult>;
-    invokeFunction(cim: ContractInvocationMulti): Promise<string>;
+    invokeFunction(cim: ContractInvocationMulti | BuiltTransaction): Promise<string>;
+    signTransaction(cim: ContractInvocationMulti | BuiltTransaction): Promise<BuiltTransaction>;
+    private cimToTx;
+    private signTx;
+    private invokeTx;
+    private cimOrBtToSignedTx;
+    private isBt;
+    private btToTx;
+    private cimAndTxToBt;
     calculateFee(cim: ContractInvocationMulti): Promise<CalculateFee>;
     getNetworkFee(cim: ContractInvocationMulti): Promise<Neon.u.BigInteger>;
     getSystemFee(cim: ContractInvocationMulti): Promise<Neon.u.BigInteger>;
     traverseIterator(sessionId: string, iteratorId: string, count: number): Promise<StackItemJson[]>;
     static init(options: InitOptions): Promise<NeonInvoker>;
     static getMagicOfRpcAddress(rpcAddress: string): Promise<number>;
-    static buildScriptBuilder(cim: ContractInvocationMulti): string;
+    private buildScriptHex;
     static convertParams(args: ExtendedArg[] | undefined): Neon.sc.ContractParam[];
     static buildSigner(optionsAccount: Neon.wallet.Account | undefined, signerEntry?: Signer): Neon.tx.Signer;
     static buildMultipleSigner(optionAccounts: (Neon.wallet.Account | undefined)[], signers?: Signer[]): Neon.tx.Signer[];

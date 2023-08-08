@@ -42,14 +42,24 @@ class NeonInvoker {
     testInvoke(cim) {
         return __awaiter(this, void 0, void 0, function* () {
             const accountArr = this.normalizeAccountArray(this.options.account);
-            const script = NeonInvoker.buildScriptBuilder(cim);
+            const script = this.buildScriptHex(cim);
             return yield new neon_js_1.rpc.RPCClient(this.options.rpcAddress).invokeScript(neon_js_1.u.HexString.fromHex(script), accountArr[0] ? NeonInvoker.buildMultipleSigner(accountArr, cim.signers) : undefined);
         });
     }
     invokeFunction(cim) {
         return __awaiter(this, void 0, void 0, function* () {
+            return yield this.invokeTx(yield this.cimOrBtToSignedTx(cim));
+        });
+    }
+    signTransaction(cim) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.cimAndTxToBt(cim, yield this.cimOrBtToSignedTx(cim));
+        });
+    }
+    cimToTx(cim) {
+        return __awaiter(this, void 0, void 0, function* () {
             const accountArr = this.normalizeAccountArray(this.options.account);
-            const script = NeonInvoker.buildScriptBuilder(cim);
+            const script = this.buildScriptHex(cim);
             const rpcClient = new neon_js_1.rpc.RPCClient(this.options.rpcAddress);
             const currentHeight = yield rpcClient.getBlockCount();
             let trx = new neon_js_1.tx.Transaction({
@@ -57,10 +67,14 @@ class NeonInvoker {
                 validUntilBlock: currentHeight + this.options.validBlocks,
                 signers: NeonInvoker.buildMultipleSigner(accountArr, cim.signers),
             });
-            const systemFee = yield this.getSystemFee(cim);
-            const networkFee = yield this.getNetworkFee(cim);
-            trx.networkFee = networkFee;
-            trx.systemFee = systemFee;
+            trx.networkFee = yield this.getSystemFee(cim);
+            trx.systemFee = yield this.getNetworkFee(cim);
+            return trx;
+        });
+    }
+    signTx(trx) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const accountArr = this.normalizeAccountArray(this.options.account);
             for (const account of accountArr) {
                 if (account) {
                     if (this.options.signingCallback) {
@@ -80,8 +94,39 @@ class NeonInvoker {
                     }
                 }
             }
+            return trx;
+        });
+    }
+    invokeTx(trx) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const rpcClient = new neon_js_1.rpc.RPCClient(this.options.rpcAddress);
             return yield rpcClient.sendRawTransaction(trx);
         });
+    }
+    cimOrBtToSignedTx(cim) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let trx;
+            if (this.isBt(cim)) {
+                const bt = cim;
+                if (bt.script !== this.buildScriptHex(bt)) {
+                    throw new Error('The script in the BuiltTransaction is not the same as the one generated from the ContractInvocationMulti');
+                }
+                trx = this.btToTx(bt);
+            }
+            else {
+                trx = yield this.cimToTx(cim);
+            }
+            return yield this.signTx(trx);
+        });
+    }
+    isBt(cim) {
+        return cim.script !== undefined;
+    }
+    btToTx(signedTransaction) {
+        return neon_js_1.tx.Transaction.fromJson(Object.assign(signedTransaction, { sender: '', attributes: [] }));
+    }
+    cimAndTxToBt(cim, trx) {
+        return Object.assign(cim, trx.toJson());
     }
     calculateFee(cim) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -101,7 +146,7 @@ class NeonInvoker {
                 return neon_js_1.u.BigInteger.fromNumber(cim.networkFeeOverride);
             }
             const accountArr = this.normalizeAccountArray(this.options.account);
-            const script = NeonInvoker.buildScriptBuilder(cim);
+            const script = this.buildScriptHex(cim);
             const rpcClient = new neon_js_1.rpc.RPCClient(this.options.rpcAddress);
             const currentHeight = yield rpcClient.getBlockCount();
             const trx = new neon_js_1.tx.Transaction({
@@ -151,7 +196,7 @@ class NeonInvoker {
             return resp.protocol.network;
         });
     }
-    static buildScriptBuilder(cim) {
+    buildScriptHex(cim) {
         const sb = new neon_js_1.sc.ScriptBuilder();
         cim.invocations.forEach(c => {
             sb.emitContractCall({

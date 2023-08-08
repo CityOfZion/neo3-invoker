@@ -157,6 +157,21 @@ export type ContractInvocationMulti = {
      */
     networkFeeOverride?: number;
 };
+export type Witness = {
+    invocation: string;
+    verification: string;
+};
+export type BuiltTransaction = {
+    hash?: string;
+    size: number;
+    version: number;
+    nonce: number;
+    sysfee: string;
+    netfee: string;
+    validuntilblock: number;
+    script: string;
+    witnesses: Witness[];
+} & ContractInvocationMulti;
 export declare enum StackItemType {
     Any = 0,
     Pointer = 16,
@@ -178,7 +193,7 @@ export interface StackItemInteropInterfaceJson extends StackItemJson {
 export interface StackItemJson {
     type: keyof typeof StackItemType;
     value?: string | boolean | number | StackItemJson[];
-    /** These properties comes when the invoke result is a iterator. You need to call the traverseIterator method to get the real result */
+    /** These properties come when the invoke result is an iterator. You need to call the traverseIterator method to get the real result */
     interface?: string;
     id?: string;
 }
@@ -210,7 +225,7 @@ export interface InvokeResult<T extends StackItemJson = StackItemJson> {
  */
 export interface Neo3Invoker {
     /**
-     * Sends an 'invokeFunction' request to the Wallet and it will communicate with the blockchain. It will consume gas and persist data to the blockchain.
+     * Sends an 'invokeFunction' request to the Wallet, and it will communicate with the blockchain. It will consume gas and persist data to the blockchain.
      *
      * ```
      * const invocations: ContractInvocation[] = [
@@ -250,10 +265,10 @@ export interface Neo3Invoker {
      * @param params the contract invocation options
      * @return the call result promise. It might only contain the transactionId, another call to the blockchain might be necessary to check the result.
      */
-    invokeFunction: (cim: ContractInvocationMulti) => Promise<string>;
+    invokeFunction: (cim: ContractInvocationMulti | BuiltTransaction) => Promise<string>;
     /**
-     * Sends a `testInvoke` request to the Wallet and it will communicate with the blockchain.
-     * It will not consume any gas but it will also not persist any data, this is often used to retrieve SmartContract information or check how much gas an invocation will cost.
+     * Sends a `testInvoke` request to the Wallet, and it will communicate with the blockchain.
+     * It will not consume any gas, but it will also not persist any data, this is often used to retrieve SmartContract information or check how much gas an invocation will cost.
      * Also, the wallet might choose to not ask the user authorization for test invocations making them easy to use.
      *
      * ```
@@ -301,4 +316,9 @@ export interface Neo3Invoker {
      * @return the call result promise
      */
     traverseIterator: (sessionId: string, iteratorId: string, count: number) => Promise<StackItemJson[]>;
+    /**
+     * This method is used to sign a transaction and return the ready to send transaction. This can be used to allow signing by different wallets.
+     * @param cim a ContractInvocationMulti or a BuiltTransaction
+     */
+    signTransaction: (cim: ContractInvocationMulti | BuiltTransaction) => Promise<BuiltTransaction>;
 }

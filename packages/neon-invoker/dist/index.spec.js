@@ -44,6 +44,7 @@ describe('Neon Tests', function () {
                 },
             ],
         });
+        console.log(txId);
         (0, assert_1.default)(txId.length > 0, 'has txId');
         return true;
     }));
