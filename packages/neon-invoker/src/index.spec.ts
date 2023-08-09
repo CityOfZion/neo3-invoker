@@ -1,5 +1,5 @@
 import { ContractInvocationMulti } from '@cityofzion/neo3-invoker'
-import { NeonInvoker } from './index'
+import { NeonInvoker, typeChecker } from './index'
 import { wallet, tx } from '@cityofzion/neon-core'
 import assert from 'assert'
 import chai from 'chai'
@@ -22,7 +22,7 @@ describe('Neon Tests', function () {
           args: [
             { type: 'Hash160', value: account.address },
             { type: 'Hash160', value: 'NhGomBpYnKXArr55nHRQ5rzy79TwKVXZbr' },
-            { type: 'Integer', value: 100000000 },
+            { type: 'Integer', value: '100000000' },
             { type: 'Array', value: [] },
           ],
         },
@@ -55,7 +55,7 @@ describe('Neon Tests', function () {
           args: [
             { type: 'Hash160', value: account.address },
             { type: 'Hash160', value: 'NhGomBpYnKXArr55nHRQ5rzy79TwKVXZbr' },
-            { type: 'Integer', value: 100000000 },
+            { type: 'Integer', value: '100000000' },
             { type: 'Array', value: [] },
           ],
         },
@@ -109,7 +109,313 @@ describe('Neon Tests', function () {
     })
 
     assert.equal(resp.state, 'HALT', 'success')
-    assert.equal(resp.stack[0].value, 'R0FT', 'correct symbol')
-    return true
+    if (typeChecker.isStackTypeByteString(resp.stack[0])){
+      assert.equal(resp.stack[0].value , 'R0FT', 'correct symbol')
+    }else{
+      assert.fail('stack return is not ByteString')
+    }
   })
+})
+
+
+describe('Invoke return type and value tests', function () {
+
+  it('tests integer return', async () => {
+    const invoker = await NeonInvoker.init({
+      rpcAddress: NeonInvoker.TESTNET,
+    })
+
+    const resp = await invoker.testInvoke({
+      invocations: [
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'negative_number',
+          args: [ ]
+        },
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'return_same_int',
+          args: [ { type: 'Integer', value: '1234'} ]
+        },
+      ],
+    })
+
+    assert.equal(resp.state, 'HALT', 'success')
+    if (typeChecker.isStackTypeInteger(resp.stack[0])){
+      assert.equal(resp.stack[0].value , '-100')
+    }else{
+      assert.fail('stack return is not Integer')
+    }
+
+    if (typeChecker.isStackTypeInteger(resp.stack[1])){
+      assert.equal(resp.stack[1].value , '1234')
+    }else{
+      assert.fail('stack return is not Integer')
+    }
+  })
+
+  it('tests boolean return', async () => {
+    const invoker = await NeonInvoker.init({
+      rpcAddress: NeonInvoker.TESTNET,
+    })
+
+    const resp = await invoker.testInvoke({
+      invocations: [
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'bool_true',
+          args: [ ]
+        },
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'bool_false',
+          args: [ ]
+        },
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'return_same_bool',
+          args: [ { type: 'Boolean', value: true} ]
+        },
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'return_same_bool',
+          args: [ { type: 'Boolean', value: false} ]
+        },
+      ],
+    })
+
+    assert.equal(resp.state, 'HALT', 'success')
+    if (typeChecker.isStackTypeBoolean(resp.stack[0])){
+      assert.equal(resp.stack[0].value , true)
+    }else{
+      assert.fail('stack return is not Boolean')
+    }
+    if (typeChecker.isStackTypeBoolean(resp.stack[1])){
+      assert.equal(resp.stack[1].value , false)
+    }else{
+      assert.fail('stack return is not Boolean')
+    }
+    if (typeChecker.isStackTypeBoolean(resp.stack[2])){
+      assert.equal(resp.stack[2].value , true)
+    }else{
+      assert.fail('stack return is not Boolean')
+    }
+    if (typeChecker.isStackTypeBoolean(resp.stack[3])){
+      assert.equal(resp.stack[3].value , false)
+    }else{
+      assert.fail('stack return is not Boolean')
+    }
+  })
+
+  it('tests boolean return', async () => {
+    const invoker = await NeonInvoker.init({
+      rpcAddress: NeonInvoker.TESTNET,
+    })
+
+    const resp = await invoker.testInvoke({
+      invocations: [
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'bool_true',
+          args: [ ]
+        },
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'bool_false',
+          args: [ ]
+        },
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'return_same_bool',
+          args: [ { type: 'Boolean', value: true} ]
+        },
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'return_same_bool',
+          args: [ { type: 'Boolean', value: false} ]
+        },
+      ],
+    })
+
+    assert.equal(resp.state, 'HALT', 'success')
+    if (typeChecker.isStackTypeBoolean(resp.stack[0])){
+      assert.equal(resp.stack[0].value , true)
+    }else{
+      assert.fail('stack return is not Boolean')
+    }
+    if (typeChecker.isStackTypeBoolean(resp.stack[1])){
+      assert.equal(resp.stack[1].value , false)
+    }else{
+      assert.fail('stack return is not Boolean')
+    }
+    if (typeChecker.isStackTypeBoolean(resp.stack[2])){
+      assert.equal(resp.stack[2].value , true)
+    }else{
+      assert.fail('stack return is not Boolean')
+    }
+    if (typeChecker.isStackTypeBoolean(resp.stack[3])){
+      assert.equal(resp.stack[3].value , false)
+    }else{
+      assert.fail('stack return is not Boolean')
+    }
+  })
+
+  it('tests array return', async () => {
+    const invoker = await NeonInvoker.init({
+      rpcAddress: NeonInvoker.TESTNET,
+    })
+
+    const resp = await invoker.testInvoke({
+      invocations: [
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'positive_numbers',
+          args: []
+        },
+      ],
+    })
+
+    assert.equal(resp.state, 'HALT', 'success')
+    if (typeChecker.isStackTypeArray(resp.stack[0])){
+      assert.deepEqual(resp.stack[0].value , [
+        {
+          "type": "Integer",
+          "value": "1"
+        },
+        {
+            "type": "Integer",
+            "value": "20"
+        },
+        {
+            "type": "Integer",
+            "value": "100"
+        },
+        {
+            "type": "Integer",
+            "value": "123"
+        }
+      ])
+    }else{
+      assert.fail('stack return is not Array')
+    }
+  })
+
+  it('tests bytestring return', async () => {
+    const invoker = await NeonInvoker.init({
+      rpcAddress: NeonInvoker.TESTNET,
+    })
+
+    const resp = await invoker.testInvoke({
+      invocations: [
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'return_str',
+          args: []
+        },
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'return_bytes',
+          args: []
+        },
+      ],
+    })
+
+    assert.equal(resp.state, 'HALT', 'success')
+    if (typeChecker.isStackTypeByteString(resp.stack[0])){
+      assert.deepEqual(resp.stack[0].value, 'dGVzdGluZyBzdHJpbmcgcmV0dXJu')
+    }else{
+      assert.fail('stack return is not ByteString')
+    }
+
+    if (typeChecker.isStackTypeByteString(resp.stack[1])){
+      assert.deepEqual(resp.stack[1].value, 'dGVzdGluZyBzdHJpbmcgcmV0dXJu')
+    }else{
+      assert.fail('stack return is not ByteString')
+    }
+  })
+
+  it('tests array return', async () => {
+    const invoker = await NeonInvoker.init({
+      rpcAddress: NeonInvoker.TESTNET,
+    })
+
+    const resp = await invoker.testInvoke({
+      invocations: [
+        {
+          scriptHash: '0x7346e59b3b3516467390a11c390679ab46b37af3',
+          operation: 'positive_numbers',
+          args: []
+        },
+      ],
+    })
+
+    assert.equal(resp.state, 'HALT', 'success')
+    if (typeChecker.isStackTypeArray(resp.stack[0])){
+      assert.deepEqual(resp.stack[0].value , [
+        {
+          "type": "Integer",
+          "value": "1"
+        },
+        {
+            "type": "Integer",
+            "value": "20"
+        },
+        {
+            "type": "Integer",
+            "value": "100"
+        },
+        {
+            "type": "Integer",
+            "value": "123"
+        }
+      ])
+    }else{
+      assert.fail('stack return is not Array')
+    }
+  })
+
+  it('tests map return', async () => {
+    const invoker = await NeonInvoker.init({
+      rpcAddress: NeonInvoker.TESTNET,
+    })
+
+    const resp = await invoker.testInvoke({
+      invocations: [
+        {
+          scriptHash: '0x8b43ab0c83b7d12cf35a0e780072bc314a688796',
+          operation: 'main',
+          args: [ ]
+        },
+      ],
+    })
+
+    assert.equal(resp.state, 'HALT', 'success')
+    if (typeChecker.isStackTypeMap(resp.stack[0])){
+      assert.deepEqual(resp.stack[0].value, [
+        {
+          key: {
+            type: "ByteString",
+            value: "YQ=="
+          },
+          value: {
+            type: "Integer",
+            value: "4"
+          }
+        },
+        {
+          key: {
+            type: "Integer",
+            value: "13"
+          },
+          value: {
+            type: "Integer",
+            value: "3"
+          }
+        }
+      ])
+    } else{
+      assert.fail('stack return is not Map')
+    }
+  })
+
 })

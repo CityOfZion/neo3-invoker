@@ -4,10 +4,11 @@ import {
   Neo3Invoker,
   Arg,
   InvokeResult,
-  StackItemJson,
+  RpcResponseStackItem,
 } from '@cityofzion/neo3-invoker'
 import { tx, u, rpc, sc, api, wallet } from '@cityofzion/neon-js'
 import * as Neon from '@cityofzion/neon-core'
+import * as typeChecker from './typeChecker'
 
 export type RpcConfig = {
   rpcAddress: string
@@ -37,15 +38,17 @@ export class NeonInvoker implements Neo3Invoker {
   static TESTNET = 'https://testnet1.neo.coz.io:443'
 
   private constructor(public options: Options) {}
-
+  
   async testInvoke(cim: ContractInvocationMulti): Promise<InvokeResult> {
     const accountArr = this.normalizeAccountArray(this.options.account)
     const script = NeonInvoker.buildScriptBuilder(cim)
 
-    return await new rpc.RPCClient(this.options.rpcAddress).invokeScript(
-        u.HexString.fromHex(script),
-        accountArr[0] ? NeonInvoker.buildMultipleSigner(accountArr, cim.signers) : undefined,
+    const rpcResult = await new rpc.RPCClient(this.options.rpcAddress).invokeScript(
+      u.HexString.fromHex(script),
+      accountArr[0] ? NeonInvoker.buildMultipleSigner(accountArr, cim.signers) : undefined,
     )
+
+    return {...rpcResult, stack: rpcResult.stack as RpcResponseStackItem[]}
   }
 
   async invokeFunction(cim: ContractInvocationMulti): Promise<string> {
@@ -148,11 +151,11 @@ export class NeonInvoker implements Neo3Invoker {
     return systemFee.add(cim.extraSystemFee ?? 0)
   }
 
-  async traverseIterator(sessionId: string, iteratorId: string, count: number): Promise<StackItemJson[]> {
+  async traverseIterator(sessionId: string, iteratorId: string, count: number): Promise<RpcResponseStackItem[]> {
     const rpcClient = new rpc.RPCClient(this.options.rpcAddress)
     const result = await rpcClient.traverseIterator(sessionId, iteratorId, count)
 
-    return result.map((item): StackItemJson => ({ value: item.value as any, type: item.type as any }))
+    return result.map((item): RpcResponseStackItem => ({ value: item.value as any, type: item.type as any }))
   }
 
   static async init(options: InitOptions): Promise<NeonInvoker> {
@@ -208,6 +211,8 @@ export class NeonInvoker implements Neo3Invoker {
           return sc.ContractParam.integer(a.value)
         case 'Array':
           return sc.ContractParam.array(...this.convertParams(a.value))
+        case 'Map':
+          return sc.ContractParam.map(...a.value.map(map => ({key: this.convertParams([map.key])[0], value: this.convertParams([map.value])[0]})))
         case 'ByteArray':
           return sc.ContractParam.byteArray(u.hex2base64(a.value))
       }
@@ -250,3 +255,5 @@ export class NeonInvoker implements Neo3Invoker {
     }
   }
 }
+
+export { typeChecker }
