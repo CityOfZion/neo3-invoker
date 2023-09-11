@@ -1,3 +1,8 @@
+> ### ⚠️ This repository has been moved to [@CityOfZion/neon-dappkit](https://github.com/CityOfZion/neon-dappkit)
+> Which has the same classes and methods, making migration very easy.
+
+---
+
 <p align="center">
   <img
     src=".github/resources/images/coz.png"
